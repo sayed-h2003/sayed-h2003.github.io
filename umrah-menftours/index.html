@@ -205,6 +205,20 @@
       } catch (e) { fail(e); }
     });
 
+    /* 🖨️ (V4.542) اسم ملف «حفظ بتنسيق PDF» من نافذة الطباعة = عنوان هذه الصفحة (الصفحة العليا) — البرنامج يرسل الاسم المتفق عليه قبل الطباعة ويعيد العنوان بعدها */
+    var MF_TITLE0 = document.title, mfTitleT = 0;
+    window.addEventListener('message', function (ev) {
+      var d = ev.data;
+      if (!d || typeof d !== 'object' || d.type !== 'mf-title') return;
+      var host = '';
+      try { host = new URL(ev.origin).hostname; } catch (e) { return; }
+      if (!/(^|\.)googleusercontent\.com$/.test(host) && !/(^|\.)script\.google\.com$/.test(host)) return;
+      clearTimeout(mfTitleT);
+      var t = String(d.title || '').replace(/[\u0000-\u001f<>]/g, '').slice(0, 180);
+      document.title = t || MF_TITLE0;
+      if (t) mfTitleT = setTimeout(function () { document.title = MF_TITLE0; }, 120000);
+    });
+
     /* 📱 (V4.319) حفظ «مفتاح الجهاز» هنا أيضاً: تخزين إطار جوجل الداخلي معزول وقد يُمسح (خصوصاً آيفون)، أما هذه
        الصفحة فتخزينها ثابت — فيستعيد البرنامج جلسته بصمت عند فتحه من الشاشة الرئيسية بدل طلب إعادة الدخول.
        نفس فحص النطاقات أعلاه، والرد للإطار المرسِل فقط. */
