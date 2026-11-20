@@ -168,7 +168,7 @@
       window.__asSrc = asSrc;
       if (window.appHostDb_()) window.appLoadDb_(fr, asSrc); else fr.src = asSrc;
       if (ho && !window.appHostDb_()) { try { history.replaceState(null, '', location.pathname + '?go=' + encodeURIComponent(go)); } catch (e) {} }   // الرمز لمرة واحدة — لا يبقى بشريط العنوان
-      fr.addEventListener('load', function () { try { fr.contentWindow.postMessage({ type: 'mf-wrap', url: location.origin + location.pathname }, '*'); } catch (e) {} });
+      fr.addEventListener('load', function () { try { var _w = ''; try { _w = localStorage.getItem('app_host') === 'as' ? 'host=as' : (localStorage.getItem('app_last_err') || ''); } catch (eW) {} fr.contentWindow.postMessage({ type: 'mf-wrap', url: location.origin + location.pathname, why: _w }, '*'); } catch (e) {} });
     })();
   </script>
 
