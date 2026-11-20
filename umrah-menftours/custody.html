@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>صفحة العهدة</title>
+<link rel="icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* 🧰 (V4.612) صفحة مسؤول العهدة — مستقلة تماماً عن البرنامج: دخول بنفس المستخدم، ولا تعرض إلا العهد المخصصة له (240_cust_desk.sql) */
+:root{--n:#1e3d59;--g:#0f6b55;--bg:#f3f5f7;--ln:#d5dde5;--mut:#64748b;--red:#b91c1c;--grn:#15803d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#1f2937;font-family:Tajawal,Cairo,system-ui,sans-serif;font-size:15px}
+h1,h2,b,th,button{font-family:Cairo,Tajawal,sans-serif}
+.top{background:linear-gradient(135deg,#1e3d59,#0f4c4c);color:#fff;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+.top h1{font-size:17px;margin:0;font-weight:800}.top select{border-radius:8px;border:0;padding:5px 8px;font-family:inherit;font-size:14px;max-width:60vw}
+.top .sp{flex:1}.btn{border:0;border-radius:8px;padding:7px 14px;font-weight:700;cursor:pointer;font-size:14px}
+.b1{background:var(--g);color:#fff}.b2{background:#fff;color:var(--n)}.b3{background:#e2e8f0;color:#1f2937}.bd{background:#fee2e2;color:var(--red)}
+.wrap{max-width:1100px;margin:0 auto;padding:12px}
+.card{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:12px}
+.kp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.kp div{background:#fff;border:1px solid var(--ln);border-radius:10px;padding:8px 10px}
+.kp small{color:var(--mut);display:block;font-size:12px}.kp b{font-size:18px;font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}
+@media(max-width:640px){.kp{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.frm{display:grid;grid-template-columns:130px 120px 120px minmax(0,1fr) auto;gap:8px;align-items:end}
+.frm.pt{grid-template-columns:130px 120px 120px minmax(0,1fr) minmax(0,1fr) auto}
+@media(max-width:760px){.frm,.frm.pt{grid-template-columns:1fr 1fr}.frm .w2{grid-column:1/-1}}@media(min-width:761px){.frm .w2{grid-column:auto}}
+label{font-size:12px;color:var(--mut);display:block;margin-bottom:2px}
+input{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:7px 9px;font-family:inherit;font-size:15px;background:#fff}
+input:focus{outline:2px solid #99c9bb;border-color:var(--g)}.num{direction:ltr;text-align:center;font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto;border:1px solid var(--ln);border-radius:12px;background:#fff}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th{background:#7d5a2c;color:#fff;padding:8px;font-size:13px;position:sticky;top:0}td{padding:7px 8px;border-bottom:1px solid #e8edf2;text-align:center}
+td.d{text-align:right}tr.pend td{background:#fffbeb}tfoot td{background:#f1f5f9;font-weight:800;border-top:2px solid var(--n)}
+.in{color:var(--grn);font-weight:700}.out{color:var(--red);font-weight:700}.tag{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700}
+.t1{background:#fef3c7;color:#92400e}.t2{background:#dcfce7;color:#166534}
+.lg{max-width:360px;margin:12vh auto;background:#fff;border-radius:14px;padding:22px;border:1px solid var(--ln)}
+.lg h2{margin:0 0 4px;font-size:19px;color:var(--n)}.err{color:var(--red);font-weight:700;font-size:13px;min-height:18px;margin:6px 0}
+.lnk{background:none;border:0;color:#2563eb;cursor:pointer;font-size:13px;padding:0 4px}
+.msg{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;border-radius:10px;padding:9px 16px;font-size:14px;z-index:20;display:none}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="login" class="lg" hidden>
+  <h2>🧰 صفحة العهدة</h2><div style="color:#64748b;font-size:13px">ادخل باسم المستخدم وكلمة المرور الخاصة بك</div>
+  <div style="margin-top:12px"><label>اسم المستخدم</label><input id="lu" autocomplete="username"></div>
+  <div style="margin-top:8px"><label>كلمة المرور</label><input id="lp" type="password" autocomplete="current-password"></div>
+  <div id="lerr" class="err"></div>
+  <button class="btn b1" style="width:100%" id="lbtn" onclick="doLogin()">دخول</button>
+</div>
+<div id="app" hidden>
+  <div class="top"><h1>🧰 العهدة</h1><select id="desk" onchange="pickDesk(this.value)"></select><span class="sp"></span><span id="who" style="font-size:13px"></span>
+    <button class="btn b2" onclick="load()">🔄</button><button class="btn b2" onclick="logout()">خروج</button></div>
+  <div class="wrap">
+    <div class="kp" style="margin-bottom:12px"><div><small>إجمالي الوارد</small><b id="kIn" class="in">0</b></div><div><small>إجمالي المنصرف</small><b id="kOut" class="out">0</b></div>
+      <div><small>الرصيد النهائي</small><b id="kBal">0</b></div><div><small>صفوف بلا قيد بعد</small><b id="kPend">0</b></div></div>
+    <div class="card">
+      <div id="frm" class="frm">
+        <div class="w2"><label>التاريخ</label><input id="fDate" class="num" placeholder="يوم/شهر/سنة" inputmode="numeric"></div>
+        <div><label>وارد</label><input id="fIn" class="num" inputmode="decimal"></div>
+        <div><label>منصرف</label><input id="fOut" class="num" inputmode="decimal"></div>
+        <div class="w2"><label>البيان</label><input id="fDesc"></div>
+        <div class="w2" id="fPartyBox" hidden><label>الحساب المقابل (اختياري)</label><input id="fParty"></div>
+        <div class="w2" style="display:flex;gap:6px"><button class="btn b1" id="fBtn" onclick="saveRow()">➕ تسجيل</button><button class="btn b3" id="fCancel" onclick="editRow(0)" hidden>إلغاء</button></div>
+      </div>
+      <div id="ferr" class="err"></div>
+    </div>
+    <div class="tw"><table><thead><tr><th>م</th><th>التاريخ</th><th>وارد</th><th>منصرف</th><th>البيان</th><th id="thParty" hidden>الحساب المقابل</th><th>الرصيد التراكمي</th><th>رقم القيد</th><th></th></tr></thead>
+      <tbody id="tb"></tbody><tfoot id="tf"></tfoot></table></div>
+    <div style="color:#64748b;font-size:12.5px;margin-top:8px">الصف بلا رقم قيد = لم يكمله المحاسب بعد، ويمكنك تعديله أو حذفه. بعد تسجيل قيده يثبت كما هو.</div>
+  </div>
+</div>
+<div id="msg" class="msg"></div>
+<script>
+(function(){
+var EXEC='https://script.google.com/macros/s/AKfycbzmZ7ubyNlqjum0SlNSDqmIAN1VqDNd9FU-eM6Ihqg17-MAb_QnV7cDKCGaVJ_6-2iA7g/exec';
+var S={pub:null,tok:'',exp:0,user:'',desks:[],acc:'',d:null,edit:0};
+var LS=function(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){return null;}};
+var $=function(id){return document.getElementById(id);};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+var fmt=function(n){n=+n||0;return n.toLocaleString('en-US',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});};
+var toast=function(t){var m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(function(){m.style.display='none';},2600);};
+var FN_RX=/^https:\/\/[a-z0-9]+\.supabase\.co\/functions\/v1\/app$/;
+function pub(){
+  if(S.pub)return Promise.resolve(S.pub);
+  var fn=LS('app_fn');
+  var p=fn&&FN_RX.test(fn)?Promise.resolve(fn):fetch(EXEC+'?appcfg=1',{redirect:'follow'}).then(function(r){return r.json();}).then(function(j){if(!j||!j.ok||!FN_RX.test(j.app))throw new Error('cfg');LS('app_fn',j.app);return j.app;});
+  return p.then(function(f){return fetch(f+'?pub=1').then(function(r){return r.json();});}).then(function(j){if(!j||!j.url||!j.anon)throw new Error('pub');S.pub=j;return j;});
+}
+function rpc(fn,body,tok){
+  return pub().then(function(P){return fetch(P.url+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:P.anon,Authorization:'Bearer '+(tok===null?P.anon:(tok||S.tok)),'Content-Type':'application/json'},body:JSON.stringify(body||{})});})
+    .then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t);}catch(e){}if(!r.ok){var er=new Error((j&&j.message)||('خطأ '+r.status));er.status=r.status;throw er;}return j;});});
+}
+function sha(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2);}).join('');});}
+function adopt(j){S.tok=j.token;S.exp=+j.expiresAt||0;S.user=j.username;try{sessionStorage.setItem('cd_tok',JSON.stringify({t:S.tok,e:S.exp,u:S.user}));}catch(e){}}
+window.doLogin=function(){
+  var u=$('lu').value.trim(),p=$('lp').value;if(!u||!p){$('lerr').textContent='اكتب اسم المستخدم وكلمة المرور';return;}
+  $('lbtn').disabled=true;$('lerr').textContent='';
+  sha(p).then(function(h){return rpc('app_login',{p_user:u,p_hash:h},null);}).then(function(j){
+    $('lbtn').disabled=false;
+    if(!j||!j.success||!j.token){$('lerr').textContent='بيانات الدخول غير صحيحة (أو يلزم تغيير كلمة المرور من البرنامج)';return;}
+    adopt(j);$('lp').value='';
+    rpc('app_dev_issue',{}).then(function(k){if(k&&k.key)LS('cd_dev',k.key);},function(){});
+    start();
+  },function(e){$('lbtn').disabled=false;$('lerr').textContent='تعذّر الاتصال: '+e.message;});
+};
+window.logout=function(){var k=LS('cd_dev');if(k)rpc('app_dev_revoke',{p_key:k},null).then(function(){},function(){});LS('cd_dev',null);try{sessionStorage.removeItem('cd_tok');}catch(e){}S.tok='';show(false);};
+function show(inApp){$('login').hidden=inApp;$('app').hidden=!inApp;}
+function resume(){
+  try{var c=JSON.parse(sessionStorage.getItem('cd_tok')||'null');if(c&&c.t&&c.e-Date.now()>600000){S.tok=c.t;S.exp=c.e;S.user=c.u;return Promise.resolve(true);}}catch(e){}
+  var k=LS('cd_dev');if(!k)return Promise.resolve(false);
+  return rpc('app_dev_resume',{p_key:k},null).then(function(j){if(j&&j.success&&j.token){adopt(j);return true;}if(j&&j.error&&j.error!=='fallback')LS('cd_dev',null);return false;},function(){return false;});
+}
+function renewMaybe(){if(S.tok&&S.exp-Date.now()<3600000)rpc('app_renew',{}).then(function(j){if(j&&j.success&&j.token)adopt({token:j.token,expiresAt:j.expiresAt,username:S.user});},function(){});}
+function start(){
+  rpc('cd_my',{}).then(function(j){
+    S.desks=(j&&j.desks)||[];
+    if(!S.desks.length){show(false);$('lerr').textContent='لا توجد عهدة مخصصة لهذا المستخدم — راجع المدير';S.tok='';return;}
+    show(true);$('who').textContent=S.user;
+    $('desk').innerHTML=S.desks.map(function(d){return '<option value="'+esc(d.acc)+'">'+esc(d.name)+'</option>';}).join('');$('desk').hidden=S.desks.length<2;
+    var last=LS('cd_acc');pickDesk(S.desks.some(function(d){return d.acc===last;})?last:S.desks[0].acc);
+  },function(e){if(e.status===401||e.status===403){S.tok='';show(false);}else toast('تعذّر التحميل: '+e.message);});
+}
+window.pickDesk=function(a){S.acc=a;LS('cd_acc',a);$('desk').value=a;editRow(0);load();};
+window.load=function(){renewMaybe();rpc('cd_rows',{p_acc:S.acc}).then(function(d){S.d=d;draw();},function(e){if(e.status===401){S.tok='';show(false);}else toast('تعذّر التحميل: '+e.message);});};
+function draw(){
+  var d=S.d;if(!d)return;var pt=!!d.party,cur=d.cur||'';
+  $('fPartyBox').hidden=!pt;$('thParty').hidden=!pt;$('frm').className='frm'+(pt?' pt':'');
+  $('kIn').textContent=fmt(d.tin);$('kOut').textContent=fmt(d.tout);$('kBal').textContent=fmt(d.bal)+' '+cur;$('kPend').textContent=d.pend;
+  $('tb').innerHTML=(d.open?'<tr><td></td><td></td><td></td><td></td><td class="d"><b>رصيد أول المدة</b></td>'+(pt?'<td></td>':'')+'<td class="num"><b>'+fmt(d.open)+'</b></td><td></td><td></td></tr>':'')+
+    (d.rows||[]).map(function(r,i){var done=!!r.entry;
+      return '<tr class="'+(done?'':'pend')+'"><td class="num">'+(i+1)+'</td><td class="num">'+esc(r.date)+'</td><td class="num in">'+(+r['in']?fmt(r['in']):'')+'</td><td class="num out">'+(+r.out?fmt(r.out):'')+'</td><td class="d">'+esc(r.desc)+'</td>'+
+        (pt?'<td class="d">'+esc(r.party)+'</td>':'')+'<td class="num"><b>'+fmt(r.bal)+'</b></td><td>'+(done?'<span class="tag t2 num">'+esc(r.entry)+'</span>':'<span class="tag t1">بانتظار المحاسب</span>')+'</td>'+
+        '<td style="white-space:nowrap">'+(done?'':'<button class="lnk" onclick="editRow('+r.id+')">✏️</button><button class="lnk" onclick="delRow('+r.id+')">🗑️</button>')+'</td></tr>';}).join('')||
+    '<tr><td colspan="'+(pt?9:8)+'" style="padding:22px;color:#64748b">لا صفوف بعد — سجّل أول حركة من الأعلى</td></tr>';
+  $('tf').innerHTML='<tr><td colspan="2">الإجماليات</td><td class="num in">'+fmt(d.tin)+'</td><td class="num out">'+fmt(d.tout)+'</td><td class="d">الرصيد النهائي</td>'+(pt?'<td></td>':'')+'<td class="num">'+fmt(d.bal)+' '+esc(cur)+'</td><td colspan="2">'+d.n+' صف</td></tr>';
+  if(!$('fDate').value){var t=new Date();$('fDate').value=('0'+t.getDate()).slice(-2)+'/'+('0'+(t.getMonth()+1)).slice(-2)+'/'+t.getFullYear();}
+}
+window.editRow=function(id){
+  S.edit=id||0;var r=id&&S.d?(S.d.rows||[]).filter(function(x){return x.id===id;})[0]:null;
+  $('fIn').value=r&&+r['in']?r['in']:'';$('fOut').value=r&&+r.out?r.out:'';$('fDesc').value=r?r.desc:'';$('fParty').value=r?r.party:'';if(r)$('fDate').value=r.date;
+  $('fBtn').textContent=r?'💾 حفظ التعديل':'➕ تسجيل';$('fCancel').hidden=!r;$('ferr').textContent='';if(r)window.scrollTo({top:0,behavior:'smooth'});
+};
+window.saveRow=function(){
+  var dt=$('fDate').value.trim().replace(/[-.]/g,'/'),m=dt.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m){$('ferr').textContent='اكتب التاريخ بصيغة يوم/شهر/سنة';return;}
+  var p={date:('0'+m[1]).slice(-2)+'/'+('0'+m[2]).slice(-2)+'/'+m[3],'in':$('fIn').value.trim(),out:$('fOut').value.trim(),desc:$('fDesc').value.trim(),party:$('fParty').value.trim()};
+  if(S.edit)p.id=S.edit;
+  $('fBtn').disabled=true;$('ferr').textContent='';
+  rpc('cd_save',{p_acc:S.acc,p:p}).then(function(){$('fBtn').disabled=false;toast(S.edit?'✅ حُفظ التعديل':'✅ سُجّل الصف');editRow(0);load();$('fIn').focus();},
+    function(e){$('fBtn').disabled=false;$('ferr').textContent=e.message;});
+};
+var delAsk=0;
+window.delRow=function(id){
+  if(delAsk!==id){delAsk=id;toast('اضغط 🗑️ مرة ثانية لتأكيد الحذف');setTimeout(function(){if(delAsk===id)delAsk=0;},4000);return;}
+  delAsk=0;rpc('cd_del',{p_acc:S.acc,p_id:id}).then(function(){toast('🗑️ حُذف الصف');load();},function(e){toast(e.message);});
+};
+document.addEventListener('keydown',function(e){if(e.key==='Enter'){if(!$('login').hidden)doLogin();else if(e.target&&/^f(Date|In|Out|Desc|Party)$/.test(e.target.id))saveRow();}});
+setInterval(function(){if(S.tok&&!document.hidden)load();},60000);
+resume().then(function(ok){if(ok)start();else show(false);});
+})();
+</script>
+</body>
+</html>
