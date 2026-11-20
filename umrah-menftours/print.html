@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>طباعة إشعار رحلة العمرة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      padding: 25px;
+      direction: rtl;
+    }
+
+    /* إطار الصفحة فقط — التصميم الداخلي بالكامل (رأس، جداول، ألوان) يأتي جاهزاً
+       من buildBookingNoticeHtml_ في Code.gs بأنماط inline، وهو نفس المصدر المستخدم في المشاركة */
+    .report-container {
+      width: 210mm;
+      min-height: 297mm;
+      margin: auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .debug-box {
+      background: #f1f5f9;
+      border-right: 4px solid #ef4444;
+      padding: 15px;
+      margin: 15px 0;
+      font-family: monospace;
+      font-size: 13px;
+      direction: ltr;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+
+    @media print {
+      html, body {
+        width: 210mm;
+        height: 297mm;
+        background: white;
+        margin: 0;
+        padding: 0;
+      }
+      body { zoom: 92%; }
+      .report-container {
+        width: 100%;
+        max-width: 100%;
+        box-shadow: none;
+        border-radius: 0;
+        margin: 0;
+        overflow: visible;
+      }
+      @page {
+        size: A4;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+
+<div class="report-container" id="reportContent"><div style="text-align:center;padding:60px 20px;font-family:Tahoma,Arial,sans-serif;color:#1e3d59;"><div style="width:44px;height:44px;border:4px solid #dbeafe;border-top-color:#1e3d59;border-radius:50%;margin:0 auto 14px;animation:spin .8s linear infinite;"></div>جاري تجهيز الإشعار…</div></div>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<script>
+/* 🖨️ (V4.615) صفحة طباعة الإشعار المستقلة — تُحمَّل من GitHub Pages والإشعار يُبنى في Supabase (دالة gas) بنفس كود البرنامج.
+   الجلسة: رمز المستخدم المحفوظ بهذا الموقع. أي تعذّر (لا جلسة/خطأ) ⇒ صفحة Apps Script القديمة تلقائياً بنفس رمز الطباعة. */
+var EXEC_ = 'https://script.google.com/macros/s/AKfycbzmZ7ubyNlqjum0SlNSDqmIAN1VqDNd9FU-eM6Ihqg17-MAb_QnV7cDKCGaVJ_6-2iA7g/exec';
+var _printToken_ = ''; try { _printToken_ = new URLSearchParams(location.search).get('t') || ''; } catch (e) {}
+window._printToken_ = _printToken_;
+function showDebugError(msg) { document.getElementById('reportContent').innerHTML = '<div class="debug-box">❌ ' + msg + '</div>'; }
+function _old_(why) { try { console.warn('🖨️ المسار القديم —', why); } catch (e) {} if (_printToken_) location.replace(EXEC_ + '?page=print&t=' + encodeURIComponent(_printToken_)); else showDebugError('هذا الرابط غير صالح.'); }
+function _ls_(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function _pub_() {
+  var p = null; try { p = JSON.parse(_ls_('lf_supa_pub') || 'null'); } catch (e) {}
+  if (p && p.url && p.anon) return Promise.resolve(p);
+  var fn = _ls_('app_fn'); if (!fn || !/^https:\/\/[a-z0-9]+\.supabase\.co\/functions\/v1\/app$/.test(fn)) return Promise.reject(new Error('cfg'));
+  return fetch(fn + '?pub=1').then(function (r) { return r.json(); }).then(function (j) { if (!j || !j.url || !j.anon) throw new Error('pub'); return j; });
+}
+function _gas_(fn, args, raw) {
+  var tok = _ls_('authToken') || '';
+  if (tok.indexOf('eyJ') !== 0) return Promise.reject(new Error('no-session'));
+  return _pub_().then(function (P) {
+    return fetch(P.url + '/functions/v1/gas', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: P.anon, 'Content-Type': 'application/json' }, body: JSON.stringify(raw ? { fn: fn, args: args, raw: true } : { fn: fn, args: args }) });
+  }).then(function (r) { return r.json(); }).then(function (j) { if (!j || !j.ok) throw new Error((j && j.error) || 'gas'); return j.d; });
+}
+(function () {
+  if (!_printToken_) { showDebugError('هذا الرابط غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد من النظام.'); return; }
+  var t0 = Date.now();
+  _gas_('getBookingPrintPage', [_printToken_]).then(function (d) {
+    if (!d || !d.success) { if (d && d.invalid) showDebugError('هذا الرابط غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد من النظام.'); else _old_((d && d.error) || 'empty'); return; }
+    document.title = d.title || document.title;
+    var rc = document.getElementById('reportContent'); rc.innerHTML = d.html;
+    try { console.log('🖨️ [PRINT] من Supabase خلال ' + (Date.now() - t0) + 'ms — ' + d.html.length + ' حرف'); } catch (e) {}
+    var att = document.querySelectorAll('.pdf-att-sec'), txt = rc.innerText.replace(/\s+/g, '').length;
+    if (!txt && !document.images.length) { _old_('blank'); return; }
+    var imgs = Array.prototype.filter.call(document.images, function (im) { return !im.complete; });
+    var go = function () { if (!att.length) _printSoon_(700); else _loadPdfJs_(function (ok) { ok ? _expandAllAtt_(att) : _printSoon_(600); }); };
+    if (!imgs.length) go(); else { var left = imgs.length, fin = function () { if (--left <= 0) go(); }; imgs.forEach(function (im) { im.onload = fin; im.onerror = fin; }); setTimeout(function () { if (left > 0) { left = 0; go(); } }, 6000); }
+  }, function (e) { _old_((e && e.message) || e); });
+})();
+
+function _printSoon_(ms) {
+  setTimeout(function () { window.focus(); window.print(); }, ms || 800);
+}
+function _loadPdfJs_(cb) {
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload = function () {
+    try { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; } catch (e) {}
+    cb(!!window.pdfjsLib);
+  };
+  s.onerror = function () { cb(false); };
+  document.head.appendChild(s);
+}
+function _canvasBlank_(canvas) {
+  try {
+    var d = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+    var total = 0, light = 0;
+    for (var i = 0; i < d.length; i += 16) {
+      total++;
+      if (d[i] > 245 && d[i + 1] > 245 && d[i + 2] > 245) light++;
+    }
+    return total > 0 && (light / total) >= 0.999;
+  } catch (e) { return false; }
+}
+function _expandAllAtt_(els) {
+  var pending = els.length;
+  var done = function () { if (--pending <= 0) _printSoon_(500); };
+  Array.prototype.forEach.call(els, function (el) {
+    var fid = el.getAttribute('data-fid');
+    var title = el.getAttribute('data-title') || '🎫 مرفق';
+    if (!fid) { done(); return; }
+    _gas_('getPrintAttachmentBase64', [window._printToken_ || '', fid], true).then(function (res) {
+        if (!res || !res.success || !res.base64) { done(); return; }
+        try {
+          var bin = atob(res.base64), bytes = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          pdfjsLib.getDocument({ data: bytes }).promise.then(function (doc) {
+            var pages = [], chain = Promise.resolve();
+            for (var p = 1; p <= doc.numPages; p++) {
+              (function (no) {
+                chain = chain.then(function () {
+                  return doc.getPage(no).then(function (page) {
+                    var vp = page.getViewport({ scale: doc.numPages > 12 ? 1.4 : 2 });
+                    var c = document.createElement('canvas');
+                    c.width = vp.width; c.height = vp.height;
+                    var ctx = c.getContext('2d');
+                    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+                    return page.render({ canvasContext: ctx, viewport: vp }).promise.then(function () {
+                      if (_canvasBlank_(c)) return;
+                      pages.push({ no: no, data: c.toDataURL('image/jpeg', 0.82) });
+                    });
+                  });
+                });
+              })(p);
+            }
+            return chain.then(function () {
+              if (!pages.length) return;
+              var bar = function (t) {
+                return '<table style="width:100%;border-collapse:collapse;margin:0 0 6px 0;"><tr>' +
+                  '<td bgcolor="#1e3d59" style="background:#1e3d59;padding:6px 14px;border-radius:8px;font-weight:700;' +
+                  'font-size:14px;color:#ffffff;font-family:\'Cairo\',Tahoma,Arial,sans-serif;">' + t + '</td></tr></table>';
+              };
+              var css = 'width:100%;max-height:265mm;object-fit:contain;border:1px solid #ccc;border-radius:12px;display:block;';
+              var html = '';
+              pages.forEach(function (pg, i) {
+                var lbl = title + (doc.numPages > 1 ? (' — صفحة ' + pg.no + ' من ' + doc.numPages) : '');
+                html += (i === 0 ? '' : '<div style="page-break-before:always;"></div>') +
+                  bar(lbl) + '<img src="' + pg.data + '" style="' + css + '">';
+              });
+              el.innerHTML = html;
+            });
+          }).then(done, done);
+        } catch (e) { done(); }
+      }, done);
+  });
+}
+
+</script>
+</body>
+</html>
