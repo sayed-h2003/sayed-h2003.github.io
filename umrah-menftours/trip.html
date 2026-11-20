@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>كشف المعتمرين</title>
+<link rel="icon" href="favicon.ico">
+<style>html,body{margin:0;background:#f1f5f9;font-family:Tahoma,Arial,sans-serif;color:#0f172a}.w{text-align:center;padding:70px 20px;color:#1e3d59}.s{width:44px;height:44px;border:4px solid #dbeafe;border-top-color:#1e3d59;border-radius:50%;margin:0 auto 14px;animation:r .8s linear infinite}@keyframes r{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div class="w" id="w"><div class="s"></div>جاري تحميل الكشف…</div>
+<script>
+/* 🔗 (V4.616) صفحة العميل برابط مشاركة الرحلة — مستقلة على GitHub Pages، والمحتوى يُبنى في Supabase (دالة gas ?pub=trip) بنفس كود البرنامج.
+   بلا تسجيل دخول: الحماية برمز الرابط. أي تعذّر ⇒ صفحة Apps Script القديمة بنفس الرمز. */
+(function () {
+  var EXEC = 'https://script.google.com/macros/s/AKfycbzmZ7ubyNlqjum0SlNSDqmIAN1VqDNd9FU-eM6Ihqg17-MAb_QnV7cDKCGaVJ_6-2iA7g/exec';
+  var t = ''; try { t = new URLSearchParams(location.search).get('t') || ''; } catch (e) {}
+  var LS = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+  var old = function () { if (t) location.replace(EXEC + '?view=trip&t=' + encodeURIComponent(t)); else document.getElementById('w').textContent = '⚠️ رابط غير صالح'; };
+  if (!/^[A-Za-z0-9_-]{16,128}$/.test(t)) { document.getElementById('w').textContent = '⚠️ رابط غير صالح'; return; }
+  var RX = /^https:\/\/[a-z0-9]+\.supabase\.co\/functions\/v1\/app$/, fn = LS('app_fn');
+  var cfg = fn && RX.test(fn) ? Promise.resolve(fn) : fetch(EXEC + '?appcfg=1', { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) { if (!j || !j.ok || !RX.test(j.app)) throw new Error('cfg'); LS('app_fn', j.app); return j.app; });
+  var timer = setTimeout(old, 20000);
+  cfg.then(function (f) { return fetch(f + '?pub=1').then(function (r) { return r.json(); }).then(function (P) {
+      return fetch(f.replace(/\/app$/, '/gas') + '?pub=trip', { method: 'POST', headers: { apikey: P.anon, Authorization: 'Bearer ' + P.anon, 'Content-Type': 'application/json' }, body: JSON.stringify({ t: t }) }); }); })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j || !j.ok || !j.d || !j.d.html) throw new Error((j && j.error) || 'empty');
+      clearTimeout(timer); document.open(); document.write(j.d.html); document.close();
+    }).catch(function () { clearTimeout(timer); old(); });
+})();
+</script>
+</body>
+</html>

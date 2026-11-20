@@ -77,7 +77,10 @@ var EXEC_ = 'https://script.google.com/macros/s/AKfycbzmZ7ubyNlqjum0SlNSDqmIAN1V
 var _printToken_ = ''; try { _printToken_ = new URLSearchParams(location.search).get('t') || ''; } catch (e) {}
 window._printToken_ = _printToken_;
 function showDebugError(msg) { document.getElementById('reportContent').innerHTML = '<div class="debug-box">❌ ' + msg + '</div>'; }
-function _old_(why) { try { console.warn('🖨️ المسار القديم —', why); } catch (e) {} if (_printToken_) location.replace(EXEC_ + '?page=print&t=' + encodeURIComponent(_printToken_)); else showDebugError('هذا الرابط غير صالح.'); }
+function _perf_(fn, ms, ok, err) {   // (V4.616) القياس بلوحة الأداء: print:page = من Supabase · print:fallback = تحويل لصفحة Apps Script القديمة (مع السبب)
+  try { var tok = _ls_('authToken') || ''; if (tok.indexOf('eyJ') !== 0) return; _pub_().then(function (P) { fetch(P.url + '/rest/v1/rpc/perf_put', { method: 'POST', keepalive: true, headers: { apikey: P.anon, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_ver: 'print', p_rows: [{ fn: fn, src: 'edge', n: 1, ms: ms, max: ms, slow: ms >= 3000 ? 1 : 0, fail: ok ? 0 : 1, err: ok ? '' : String(err || '').slice(0, 250) }] }) }).catch(function () {}); }, function () {}); } catch (e) {}
+}
+function _old_(why) { try { console.warn('🖨️ المسار القديم —', why); } catch (e) {} _perf_('print:fallback', 0, false, why); if (_printToken_) setTimeout(function () { location.replace(EXEC_ + '?page=print&t=' + encodeURIComponent(_printToken_)); }, 250); else showDebugError('هذا الرابط غير صالح.'); }
 function _ls_(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function _pub_() {
   var p = null; try { p = JSON.parse(_ls_('lf_supa_pub') || 'null'); } catch (e) {}
@@ -99,6 +102,7 @@ function _gas_(fn, args, raw) {
     if (!d || !d.success) { if (d && d.invalid) showDebugError('هذا الرابط غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد من النظام.'); else _old_((d && d.error) || 'empty'); return; }
     document.title = d.title || document.title;
     var rc = document.getElementById('reportContent'); rc.innerHTML = d.html;
+    _perf_('print:page', Date.now() - t0, true);
     try { console.log('🖨️ [PRINT] من Supabase خلال ' + (Date.now() - t0) + 'ms — ' + d.html.length + ' حرف'); } catch (e) {}
     var att = document.querySelectorAll('.pdf-att-sec'), txt = rc.innerText.replace(/\s+/g, '').length;
     if (!txt && !document.images.length) { _old_('blank'); return; }
