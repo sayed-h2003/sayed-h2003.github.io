@@ -157,6 +157,23 @@
       };
     })();
     function APP_SRC_BASE() { return document.getElementById('app').getAttribute('data-src'); }
+    /* 🔔 (V4.620) «تحديث الآن» من شريط النسخة الجديدة داخل البرنامج: ينزّل الإصدار الأحدث لذاكرة الجهاز ثم يعيد تحميل الصفحة (فلا تُعرض النسخة القديمة المحفوظة) */
+    window.addEventListener('message', function (ev) {
+      var d = ev.data; if (!d || d.type !== 'mf-update') return;
+      try { if (ev.source !== document.getElementById('app').contentWindow) return; } catch (e) { return; }
+      var done = function () { location.reload(); }, fn = null, RX = /^https:\/\/[a-z0-9]+\.supabase\.co\/functions\/v1\/app$/;
+      try { fn = localStorage.getItem('app_fn'); } catch (e) {}
+      if (!(window.appHostDb_ && window.appHostDb_()) || !fn || !RX.test(fn) || !('caches' in window)) { done(); return; }
+      var t = setTimeout(done, 12000);
+      fetch(fn + '?v=1', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (vj) {
+        var ver = String((vj && vj.v) || ''); if (!/^[0-9.]+$/.test(ver)) throw new Error('ver');
+        var key = fn + '?ver=' + ver;
+        return fetch(key).then(function (r) { if (!r.ok) throw new Error('app'); return r.text(); }).then(function (tx) {
+          if (tx.length < 100000) throw new Error('size');
+          return caches.open('app-shell').then(function (c) { return c.put(key, new Response(tx, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })).then(function () { try { localStorage.setItem('app_ver', ver); } catch (e) {} return c.keys().then(function (ks) { ks.forEach(function (k) { if (k.url !== key) c.delete(k); }); }); }); });
+        });
+      }).then(function () { clearTimeout(t); done(); }, function () { clearTimeout(t); done(); });
+    });
   </script>
   <script>
     /* ⧉ (V4.408) فتح شاشة بتبويب جديد داخل هذا الغلاف: الرابط ?go=<مفتاح الشاشة> يُمرَّر لإطار البرنامج، فيستأنف الدخول بمفتاح الجهاز
