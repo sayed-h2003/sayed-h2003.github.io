@@ -113,13 +113,56 @@
             allow="clipboard-write; clipboard-read; web-share"></iframe>
   </div>
   <script>
+    /* 🌐 (V4.602) المرحلة 2 — البرنامج من Supabase بدل Apps Script: الصفحة تجلب ملف البرنامج من دالة «app» (مرة لكل إصدار، ثم من ذاكرة الجهاز)
+       وتضعه في الإطار نفسه (srcdoc) — كل جسور الإطار (الصور، المفتاح، العنوان) كما هي. أي تعذّر ⇒ المسار القديم (Apps Script) تلقائياً.
+       التفعيل: ?host=db (يُحفظ بالجهاز) · الرجوع: ?host=as */
+    (function () {
+      var LS = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } };
+      try { var h = new URLSearchParams(location.search).get('host'); if (h === 'db' || h === 'as') LS('app_host', h); } catch (e) {}
+      window.appHostDb_ = function () { return LS('app_host') === 'db' && 'caches' in window && typeof fetch === 'function'; };
+      var cfg = function (asBase) {
+        var u = LS('app_fn'); if (u && /^https:\/\/[a-z0-9]+\.supabase\.co\/functions\/v1\/app$/.test(u)) return Promise.resolve(u);
+        return fetch(asBase.split('?')[0] + '?appcfg=1', { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
+          if (!j || !j.ok || !/^https:\/\/[a-z0-9]+\.supabase\.co\/functions\/v1\/app$/.test(j.app)) throw new Error('cfg'); LS('app_fn', j.app); return j.app; });
+      };
+      var withTimeout = function (p, ms) { return Promise.race([p, new Promise(function (_, rj) { setTimeout(function () { rj(new Error('timeout')); }, ms); })]); };
+      window.appLoadDb_ = function (fr, asSrc) {
+        var t0 = Date.now(), fellBack = false;
+        var fallback = function (why) { if (fellBack) return; fellBack = true; try { console.warn('app: المسار القديم —', why); } catch (e) {} LS('app_last_err', String(why).slice(0, 200)); fr.removeAttribute('srcdoc'); fr.src = asSrc; };
+        withTimeout(cfg(APP_SRC_BASE()), 15000).then(function (fn) {
+          return fetch(fn + '?v=1', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (vj) {
+            var ver = String((vj && vj.v) || ''); if (!/^[0-9.]+$/.test(ver)) throw new Error('ver');
+            return caches.open('app-shell').then(function (c) {
+              var key = fn + '?ver=' + ver;
+              return c.match(key).then(function (hit) {
+                if (hit) return hit.text();
+                return fetch(fn + '?ver=' + ver).then(function (r) { if (!r.ok) throw new Error('app ' + r.status); return r.text(); }).then(function (tx) {
+                  if (tx.length < 100000 || tx.indexOf('CLIENT_APP_VERSION') < 0) throw new Error('app size');
+                  c.keys().then(function (ks) { ks.forEach(function (k) { if (k.url !== key) c.delete(k); }); });
+                  return c.put(key, new Response(tx, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })).then(function () { return tx; });
+                });
+              });
+            });
+          });
+        }).then(function (html) {
+          if (fellBack) return;
+          LS('app_last_ms', String(Date.now() - t0)); LS('app_last_err', null);
+          fr.removeAttribute('src'); fr.srcdoc = html;
+        }).catch(function (e) { fallback((e && e.message) || e); });
+      };
+    })();
+    function APP_SRC_BASE() { return document.getElementById('app').getAttribute('data-src'); }
+  </script>
+  <script>
     /* ⧉ (V4.408) فتح شاشة بتبويب جديد داخل هذا الغلاف: الرابط ?go=<مفتاح الشاشة> يُمرَّر لإطار البرنامج، فيستأنف الدخول بمفتاح الجهاز
        المحفوظ هنا (نفس تخزين الغلاف) بدل أن يُفتح رابط Apps Script مباشرةً خارج الغلاف فيطلب تسجيل الدخول من جديد */
     (function () {
       var fr = document.getElementById('app'), base = fr.getAttribute('data-src'), go = '', ho = '';
       try { var q = new URLSearchParams(location.search); go = q.get('go') || ''; ho = q.get('ho') || ''; } catch (e) {}
-      fr.src = go ? base + (base.indexOf('?') > -1 ? '&' : '?') + 'go=' + encodeURIComponent(go) + (ho ? '&ho=' + encodeURIComponent(ho) : '') : base;
-      if (ho) { try { history.replaceState(null, '', location.pathname + '?go=' + encodeURIComponent(go)); } catch (e) {} }   // الرمز لمرة واحدة — لا يبقى بشريط العنوان
+      var asSrc = go ? base + (base.indexOf('?') > -1 ? '&' : '?') + 'go=' + encodeURIComponent(go) + (ho ? '&ho=' + encodeURIComponent(ho) : '') : base;
+      window.__asSrc = asSrc;
+      if (window.appHostDb_()) window.appLoadDb_(fr, asSrc); else fr.src = asSrc;
+      if (ho && !window.appHostDb_()) { try { history.replaceState(null, '', location.pathname + '?go=' + encodeURIComponent(go)); } catch (e) {} }   // الرمز لمرة واحدة — لا يبقى بشريط العنوان
       fr.addEventListener('load', function () { try { fr.contentWindow.postMessage({ type: 'mf-wrap', url: location.origin + location.pathname }, '*'); } catch (e) {} });
     })();
   </script>
@@ -133,7 +176,7 @@
       document.querySelector('#splash .sp').style.display = '';
       sp.classList.remove('hide'); sp.style.display = 'flex';
       try { fr.src = 'about:blank'; } catch (e) {}
-      setTimeout(function () { fr.src = APP_SRC; armLoadWatch(); }, 60);
+      setTimeout(function () { if (window.appHostDb_ && window.appHostDb_()) window.appLoadDb_(fr, window.__asSrc || APP_SRC); else fr.src = APP_SRC; armLoadWatch(); }, 60);
     }
 
     var _loadTimer = null;
@@ -152,7 +195,7 @@
       var sp = document.getElementById('splash'), fr = document.getElementById('app');
       var t0 = Date.now();   // (V4.319) يبقى التوقيع ظاهراً 2.8 ثانية على الأقل حتى لو حُمِّل البرنامج أسرع
       var hide = function () { clearTimeout(_loadTimer); setTimeout(function () { sp.classList.add('hide'); setTimeout(function () { sp.style.display = 'none'; }, 450); }, Math.max(0, t0 + 2800 - Date.now())); };
-      fr.addEventListener('load', function () { if (fr.src !== 'about:blank') hide(); });
+      fr.addEventListener('load', function () { if (fr.src !== 'about:blank' && (fr.getAttribute('src') || fr.getAttribute('srcdoc'))) hide(); });
       armLoadWatch();
       var off = document.getElementById('offline');
       var upd = function () { off.classList.toggle('show', !navigator.onLine); };
