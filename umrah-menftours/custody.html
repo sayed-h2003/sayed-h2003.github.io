@@ -38,6 +38,11 @@ td.d{text-align:right}tr.pend td{background:#fffbeb}tfoot td{background:#f1f5f9;
 .lg h2{margin:0 0 4px;font-size:19px;color:var(--n)}.err{color:var(--red);font-weight:700;font-size:13px;min-height:18px;margin:6px 0}
 .lnk{background:none;border:0;color:#2563eb;cursor:pointer;font-size:13px;padding:0 4px}
 .msg{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;border-radius:10px;padding:9px 16px;font-size:14px;z-index:20;display:none}
+select{border:1px solid #cbd5e1;border-radius:8px;padding:7px 9px;font-family:inherit;font-size:15px;background:#fff;width:100%}.top select{width:auto}
+th{cursor:grab;user-select:none;white-space:nowrap}th.dg{opacity:.4}tr.flt td{background:#f8fafc;padding:3px 4px}tr.flt input{padding:3px 6px;font-size:12.5px;border-radius:6px}
+td.d{min-width:240px;white-space:normal}tr.redo td{background:#fff1f2}.t3{background:#ffe4e6;color:#9f1239}.t4{background:#e2e8f0;color:#334155}
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:30;display:flex;align-items:center;justify-content:center;padding:14px}.dlg{background:#fff;border-radius:12px;padding:14px;max-width:560px;width:100%;max-height:86vh;overflow:auto}
+@media(min-width:761px){.frm{grid-template-columns:170px 110px 110px 100px minmax(0,1fr) auto}.frm.pt{grid-template-columns:170px 110px 110px 100px minmax(0,1.4fr) minmax(0,1fr) auto}}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -51,26 +56,26 @@ td.d{text-align:right}tr.pend td{background:#fffbeb}tfoot td{background:#f1f5f9;
 </div>
 <div id="app" hidden>
   <div class="top"><h1>🧰 العهدة</h1><select id="desk" onchange="pickDesk(this.value)"></select><span class="sp"></span><span id="who" style="font-size:13px"></span>
-    <button class="btn b2" onclick="load()">🔄</button><button class="btn b2" onclick="logout()">خروج</button></div>
+    <button class="btn b2" onclick="colMenu()">⚙ الأعمدة</button><button class="btn b2" onclick="load()">🔄</button><button class="btn b2" onclick="logout()">خروج</button></div>
   <div class="wrap">
-    <div class="kp" style="margin-bottom:12px"><div><small>إجمالي الوارد</small><b id="kIn" class="in">0</b></div><div><small>إجمالي المنصرف</small><b id="kOut" class="out">0</b></div>
-      <div><small>الرصيد النهائي</small><b id="kBal">0</b></div><div><small>صفوف بلا قيد بعد</small><b id="kPend">0</b></div></div>
+    <div id="kp" class="kp" style="margin-bottom:12px"></div>
     <div class="card">
       <div id="frm" class="frm">
-        <div class="w2"><label>التاريخ</label><input id="fDate" class="num" placeholder="يوم/شهر/سنة" inputmode="numeric"></div>
-        <div><label>وارد</label><input id="fIn" class="num" inputmode="decimal"></div>
-        <div><label>منصرف</label><input id="fOut" class="num" inputmode="decimal"></div>
+        <div class="w2"><label>التاريخ</label><div style="display:flex;gap:4px"><input id="fDate" class="num" placeholder="dd/mm/yyyy" inputmode="numeric" onblur="fixDate(this)"><button type="button" class="btn b3" style="padding:7px 9px" title="التقويم" onclick="pickCal()">📅</button><input id="fCal" type="date" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" tabindex="-1" onchange="calPicked(this)"></div></div>
+        <div><label>وارد</label><input id="fIn" class="num" inputmode="decimal" oninput="chkBoth()"></div>
+        <div><label>منصرف</label><input id="fOut" class="num" inputmode="decimal" oninput="chkBoth()"></div>
+        <div><label>العملة</label><select id="fCur"><option value="SAR">ريال</option><option value="EGP">جنيه</option><option value="USD">دولار</option></select></div>
         <div class="w2"><label>البيان</label><input id="fDesc"></div>
-        <div class="w2" id="fPartyBox" hidden><label>الحساب المقابل (اختياري)</label><input id="fParty"></div>
+        <div class="w2" id="fPartyBox" hidden><label>الطرف المقابل (اختياري)</label><input id="fParty"></div>
         <div class="w2" style="display:flex;gap:6px"><button class="btn b1" id="fBtn" onclick="saveRow()">➕ تسجيل</button><button class="btn b3" id="fCancel" onclick="editRow(0)" hidden>إلغاء</button></div>
       </div>
       <div id="ferr" class="err"></div>
     </div>
-    <div class="tw"><table><thead><tr><th>م</th><th>التاريخ</th><th>وارد</th><th>منصرف</th><th>البيان</th><th id="thParty" hidden>الحساب المقابل</th><th>الرصيد التراكمي</th><th>رقم القيد</th><th></th></tr></thead>
-      <tbody id="tb"></tbody><tfoot id="tf"></tfoot></table></div>
-    <div style="color:#64748b;font-size:12.5px;margin-top:8px">الصف بلا رقم قيد = لم يكمله المحاسب بعد، ويمكنك تعديله أو حذفه. بعد تسجيل قيده يثبت كما هو.</div>
+    <div class="tw"><table id="tbl"><thead id="th"></thead><tbody id="tb"></tbody><tfoot id="tf"></tfoot></table></div>
+    <div style="color:#64748b;font-size:12.5px;margin-top:8px">الحركة «بانتظار المحاسب» يمكنك تعديلها أو حذفها. تعديل حركة لها قيد يعيدها للمراجعة والاعتماد. اسحب رأس العمود لتغيير ترتيبه، واكتب تحته للتصفية.</div>
   </div>
 </div>
+<div id="ov" class="ov" hidden onclick="if(event.target===this)this.hidden=true"><div class="dlg"><div id="ovB"></div><div style="text-align:left;margin-top:10px"><button class="btn b3" onclick="document.getElementById('ov').hidden=true">إغلاق</button></div></div></div>
 <div id="msg" class="msg"></div>
 <script>
 (function(){
@@ -118,46 +123,107 @@ function start(){
     S.desks=(j&&j.desks)||[];
     if(!S.desks.length){show(false);$('lerr').textContent='لا توجد عهدة مخصصة لهذا المستخدم — راجع المدير';S.tok='';return;}
     show(true);$('who').textContent=S.user;
-    $('desk').innerHTML=S.desks.map(function(d){return '<option value="'+esc(d.acc)+'">'+esc(d.name)+'</option>';}).join('');$('desk').hidden=S.desks.length<2;
+    $('fCur').onchange=function(){this.dataset.set='1';};$('desk').innerHTML=S.desks.map(function(d){return '<option value="'+esc(d.acc)+'">'+esc(d.name)+'</option>';}).join('');$('desk').hidden=S.desks.length<2;
     var last=LS('cd_acc');pickDesk(S.desks.some(function(d){return d.acc===last;})?last:S.desks[0].acc);
   },function(e){if(e.status===401||e.status===403){S.tok='';show(false);}else toast('تعذّر التحميل: '+e.message);});
 }
-window.pickDesk=function(a){S.acc=a;LS('cd_acc',a);$('desk').value=a;editRow(0);load();};
+var CUR={SAR:'ريال',EGP:'جنيه',USD:'دولار'};
+var COLS=[{k:'n',t:'م'},{k:'date',t:'التاريخ'},{k:'in',t:'وارد'},{k:'out',t:'منصرف'},{k:'cur',t:'العملة'},{k:'desc',t:'البيان'},{k:'bal',t:'الرصيد التراكمي'},{k:'party',t:'الطرف المقابل'},{k:'entry',t:'رقم القيد'},{k:'act',t:''}];
+var V={order:COLS.map(function(c){return c.k;}),hide:{},flt:{}};
+function vLoad(){try{var o=JSON.parse(LS('cd_cols|'+S.acc)||'null');V={order:COLS.map(function(c){return c.k;}),hide:{},flt:{}};if(o&&Array.isArray(o.order)){var ok=o.order.filter(function(k){return COLS.some(function(c){return c.k===k;});});COLS.forEach(function(c){if(ok.indexOf(c.k)<0)ok.push(c.k);});V.order=ok;V.hide=o.hide||{};}}catch(e){}}
+function vSave(){LS('cd_cols|'+S.acc,JSON.stringify({order:V.order,hide:V.hide}));}
+function cols(){var see=S.d&&S.d.see;return V.order.map(function(k){return COLS.filter(function(c){return c.k===k;})[0];}).filter(function(c){return c&&!V.hide[c.k]&&(c.k!=='party'||see);});}
+window.pickDesk=function(a){S.acc=a;LS('cd_acc',a);$('desk').value=a;vLoad();S.d=null;editRow(0);load();};
 window.load=function(){renewMaybe();rpc('cd_rows',{p_acc:S.acc}).then(function(d){S.d=d;draw();},function(e){if(e.status===401){S.tok='';show(false);}else toast('تعذّر التحميل: '+e.message);});};
+function cell(r,c,i){
+  if(c.k==='n')return '<td class="num">'+(i+1)+'</td>';
+  if(c.k==='date')return '<td class="num">'+esc(r.date)+'</td>';
+  if(c.k==='in')return '<td class="num in">'+(+r['in']?fmt(r['in']):'')+'</td>';
+  if(c.k==='out')return '<td class="num out">'+(+r.out?fmt(r.out):'')+'</td>';
+  if(c.k==='cur')return '<td>'+esc(CUR[r.cur]||r.cur)+'</td>';
+  if(c.k==='desc')return '<td class="d">'+esc(r.desc)+'</td>';
+  if(c.k==='bal')return '<td class="num"><b>'+fmt(r.bal)+'</b></td>';
+  if(c.k==='party')return '<td class="d" style="min-width:140px">'+esc(r.party)+'</td>';
+  if(c.k==='entry')return '<td>'+(r.st==='done'?'<span class="tag t2 num">'+esc(r.entry)+'</span>':r.st==='redo'?'<span class="tag t3">معدّلة — بانتظار إعادة الاعتماد</span><div class="num" style="font-size:11px;color:#64748b">'+esc(r.entry)+'</div>':'<span class="tag t1">بانتظار المحاسب</span>')+'</td>';
+  var mine=r.id&&(r.by===S.user||(S.d&&S.d.acct));
+  return '<td style="white-space:nowrap">'+(r.id?'<button class="lnk" title="سجل الحركة" onclick="hist('+r.id+')">🕘</button>':'')+(mine?'<button class="lnk" title="تعديل" onclick="editRow('+r.id+')">✏️</button>':'')+(mine&&r.st==='pending'?'<button class="lnk" title="حذف" onclick="delRow('+r.id+')">🗑️</button>':'')+'</td>';
+}
+function txt(r,k){return k==='in'||k==='out'||k==='bal'?String(+r[k]||''):k==='cur'?(CUR[r.cur]||r.cur):k==='entry'?(r.entry||'')+' '+(r.st==='pending'?'بانتظار':r.st==='redo'?'معدلة':''):String(r[k]==null?'':r[k]);}
 function draw(){
-  var d=S.d;if(!d)return;var pt=!!d.party,cur=d.cur||'';
-  $('fPartyBox').hidden=!pt;$('thParty').hidden=!pt;$('frm').className='frm'+(pt?' pt':'');
-  $('kIn').textContent=fmt(d.tin);$('kOut').textContent=fmt(d.tout);$('kBal').textContent=fmt(d.bal)+' '+cur;$('kPend').textContent=d.pend;
-  $('tb').innerHTML=(d.open?'<tr><td></td><td></td><td></td><td></td><td class="d"><b>رصيد أول المدة</b></td>'+(pt?'<td></td>':'')+'<td class="num"><b>'+fmt(d.open)+'</b></td><td></td><td></td></tr>':'')+
-    (d.rows||[]).map(function(r,i){var done=!!r.entry;
-      return '<tr class="'+(done?'':'pend')+'"><td class="num">'+(i+1)+'</td><td class="num">'+esc(r.date)+'</td><td class="num in">'+(+r['in']?fmt(r['in']):'')+'</td><td class="num out">'+(+r.out?fmt(r.out):'')+'</td><td class="d">'+esc(r.desc)+'</td>'+
-        (pt?'<td class="d">'+esc(r.party)+'</td>':'')+'<td class="num"><b>'+fmt(r.bal)+'</b></td><td>'+(done?'<span class="tag t2 num">'+esc(r.entry)+'</span>':'<span class="tag t1">بانتظار المحاسب</span>')+'</td>'+
-        '<td style="white-space:nowrap">'+(done?'':'<button class="lnk" onclick="editRow('+r.id+')">✏️</button><button class="lnk" onclick="delRow('+r.id+')">🗑️</button>')+'</td></tr>';}).join('')||
-    '<tr><td colspan="'+(pt?9:8)+'" style="padding:22px;color:#64748b">لا صفوف بعد — سجّل أول حركة من الأعلى</td></tr>';
-  $('tf').innerHTML='<tr><td colspan="2">الإجماليات</td><td class="num in">'+fmt(d.tin)+'</td><td class="num out">'+fmt(d.tout)+'</td><td class="d">الرصيد النهائي</td>'+(pt?'<td></td>':'')+'<td class="num">'+fmt(d.bal)+' '+esc(cur)+'</td><td colspan="2">'+d.n+' صف</td></tr>';
+  var d=S.d;if(!d)return;var C=cols(),pt=!!d.see;
+  $('fPartyBox').hidden=!pt;$('frm').className='frm'+(pt?' pt':'');
+  if(!S.edit&&!$('fCur').dataset.set){$('fCur').value=d.cur;}
+  var T=d.tot||{},ks=Object.keys(T);
+  $('kp').innerHTML=(ks.length?ks:[d.cur]).map(function(c){var t=T[c]||{in:0,out:0,bal:0};return '<div><small>الرصيد — '+esc(CUR[c]||c)+'</small><b>'+fmt(t.bal)+'</b><small>وارد <span class="in">'+fmt(t['in'])+'</span> · منصرف <span class="out">'+fmt(t.out)+'</span></small></div>';}).join('')+'<div><small>حركات بانتظار المحاسب</small><b>'+d.pend+'</b><small>من '+d.n+' حركة</small></div>';
+  $('th').innerHTML='<tr>'+C.map(function(c){return '<th draggable="true" data-k="'+c.k+'">'+esc(c.t)+'</th>';}).join('')+'</tr><tr class="flt">'+C.map(function(c){return '<td>'+(c.k==='n'||c.k==='act'?'':'<input data-f="'+c.k+'" value="'+esc(V.flt[c.k]||'')+'" placeholder="🔎" oninput="setFlt(this)">')+'</td>';}).join('')+'</tr>';
+  drawBody();
+  Array.prototype.forEach.call($('th').querySelectorAll('th'),function(h){
+    h.ondragstart=function(e){e.dataTransfer.setData('text/plain',h.dataset.k);h.classList.add('dg');};h.ondragend=function(){h.classList.remove('dg');};
+    h.ondragover=function(e){e.preventDefault();};h.ondrop=function(e){e.preventDefault();moveCol(e.dataTransfer.getData('text/plain'),h.dataset.k);};});
   if(!$('fDate').value){var t=new Date();$('fDate').value=('0'+t.getDate()).slice(-2)+'/'+('0'+(t.getMonth()+1)).slice(-2)+'/'+t.getFullYear();}
 }
+function drawBody(){
+  var d=S.d,C=cols(),fk=Object.keys(V.flt).filter(function(k){return V.flt[k];});
+  var rows=(d.rows||[]).filter(function(r){return fk.every(function(k){return txt(r,k).toLowerCase().indexOf(V.flt[k].toLowerCase())>=0;});});
+  $('tb').innerHTML=rows.map(function(r,i){return '<tr class="'+(r.st==='pending'?'pend':r.st==='redo'?'redo':'')+'">'+C.map(function(c){return cell(r,c,i);}).join('')+'</tr>';}).join('')||'<tr><td colspan="'+C.length+'" style="padding:22px;color:#64748b">لا حركات</td></tr>';
+  var T={};rows.forEach(function(r){var t=T[r.cur]||(T[r.cur]={i:0,o:0});t.i+=+r['in']||0;t.o+=+r.out||0;});
+  $('tf').innerHTML=Object.keys(T).map(function(c){var t=T[c];return '<tr>'+C.map(function(x){return x.k==='in'?'<td class="num in">'+fmt(t.i)+'</td>':x.k==='out'?'<td class="num out">'+fmt(t.o)+'</td>':x.k==='cur'?'<td>'+esc(CUR[c]||c)+'</td>':x.k==='desc'?'<td class="d">الإجماليات'+(fk.length?' (المعروض)':'')+' — الرصيد النهائي</td>':x.k==='bal'?'<td class="num">'+fmt(t.i-t.o)+'</td>':'<td></td>';}).join('')+'</tr>';}).join('');
+}
+window.setFlt=function(el){V.flt[el.dataset.f]=el.value;drawBody();};
+function moveCol(a,b){if(!a||a===b)return;var o=V.order.filter(function(k){return k!==a;});o.splice(o.indexOf(b),0,a);V.order=o;vSave();draw();}
+window.colMenu=function(){
+  var see=S.d&&S.d.see;
+  $('ovB').innerHTML='<b>⚙ الأعمدة — الترتيب والإظهار</b><div style="margin-top:8px">'+V.order.map(function(k,i){var c=COLS.filter(function(x){return x.k===k;})[0];if(!c||c.k==='act'||(c.k==='party'&&!see))return '';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eef2f6"><label style="flex:1;margin:0;font-size:14px;color:#1f2937"><input type="checkbox" style="width:auto" '+(V.hide[k]?'':'checked')+' onchange="colTog(\''+k+'\',this.checked)"> '+esc(c.t)+'</label><button class="btn b3" style="padding:2px 10px" onclick="colUp(\''+k+'\',-1)">▲</button><button class="btn b3" style="padding:2px 10px" onclick="colUp(\''+k+'\',1)">▼</button></div>';}).join('')+'</div><div style="margin-top:8px"><button class="lnk" onclick="colReset()">↺ الترتيب الافتراضي</button></div>';
+  $('ov').hidden=false;
+};
+window.colTog=function(k,on){if(on)delete V.hide[k];else V.hide[k]=1;vSave();draw();};
+window.colUp=function(k,dir){var i=V.order.indexOf(k),j=i+dir;if(j<0||j>=V.order.length)return;var t=V.order[i];V.order[i]=V.order[j];V.order[j]=t;vSave();draw();colMenu();};
+window.colReset=function(){LS('cd_cols|'+S.acc,null);vLoad();draw();colMenu();};
+window.fixDate=function(el){
+  var v=String(el.value||'').trim().replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d);}).replace(/[-.\s]+/g,'/'),t=new Date(),m;
+  if(/^\d{8}$/.test(v))v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);else if(/^\d{4}$/.test(v))v=v.slice(0,2)+'/'+v.slice(2);
+  m=v.match(/^(\d{1,2})(?:\/(\d{1,2}))?(?:\/(\d{2}|\d{4}))?$/);if(!m)return false;
+  var dd=+m[1],mm=m[2]?+m[2]:t.getMonth()+1,yy=m[3]?(m[3].length===2?2000+(+m[3]):+m[3]):t.getFullYear();
+  if(dd<1||dd>31||mm<1||mm>12)return false;
+  el.value=('0'+dd).slice(-2)+'/'+('0'+mm).slice(-2)+'/'+yy;return true;
+};
+window.pickCal=function(){var c=$('fCal'),m=$('fDate').value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(m)c.value=m[3]+'-'+m[2]+'-'+m[1];try{c.style.pointerEvents='auto';if(c.showPicker)c.showPicker();else{c.focus();c.click();}}catch(e){c.focus();}};
+window.calPicked=function(c){var m=String(c.value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)$('fDate').value=m[3]+'/'+m[2]+'/'+m[1];c.style.pointerEvents='none';};
+window.chkBoth=function(){var a=parseFloat($('fIn').value)||0,b=parseFloat($('fOut').value)||0;$('ferr').textContent=a>0&&b>0?'⚠️ لا يُسجَّل وارد ومنصرف في حركة واحدة — امسح أحدهما وسجّل الآخر في حركة مستقلة':'';return !(a>0&&b>0);};
 window.editRow=function(id){
   S.edit=id||0;var r=id&&S.d?(S.d.rows||[]).filter(function(x){return x.id===id;})[0]:null;
-  $('fIn').value=r&&+r['in']?r['in']:'';$('fOut').value=r&&+r.out?r.out:'';$('fDesc').value=r?r.desc:'';$('fParty').value=r?r.party:'';if(r)$('fDate').value=r.date;
-  $('fBtn').textContent=r?'💾 حفظ التعديل':'➕ تسجيل';$('fCancel').hidden=!r;$('ferr').textContent='';if(r)window.scrollTo({top:0,behavior:'smooth'});
+  $('fIn').value=r&&+r['in']?r['in']:'';$('fOut').value=r&&+r.out?r.out:'';$('fDesc').value=r?r.desc:'';$('fParty').value=r?(r.st==='done'?'':r.party):'';if(r)$('fDate').value=r.date;
+  $('fCur').value=r?r.cur:((S.d&&S.d.cur)||'SAR');
+  $('fBtn').textContent=r?'💾 حفظ التعديل':'➕ تسجيل';$('fCancel').hidden=!r;
+  $('ferr').textContent=r&&r.st!=='pending'?'ℹ️ هذه الحركة لها قيد — حفظ التعديل يعيدها للمحاسب للمراجعة وإعادة الاعتماد':'';noDescAsk=0;
+  if(r)window.scrollTo({top:0,behavior:'smooth'});
 };
+var noDescAsk=0;
 window.saveRow=function(){
-  var dt=$('fDate').value.trim().replace(/[-.]/g,'/'),m=dt.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if(!m){$('ferr').textContent='اكتب التاريخ بصيغة يوم/شهر/سنة';return;}
-  var p={date:('0'+m[1]).slice(-2)+'/'+('0'+m[2]).slice(-2)+'/'+m[3],'in':$('fIn').value.trim(),out:$('fOut').value.trim(),desc:$('fDesc').value.trim(),party:$('fParty').value.trim()};
+  if(!fixDate($('fDate'))||!/^\d{2}\/\d{2}\/\d{4}$/.test($('fDate').value)){$('ferr').textContent='اكتب التاريخ بصيغة dd/mm/yyyy (يكفي اليوم والشهر وتُكمَّل السنة)';return;}
+  if(!chkBoth())return;
+  var p={date:$('fDate').value,'in':$('fIn').value.trim(),out:$('fOut').value.trim(),cur:$('fCur').value,desc:$('fDesc').value.trim(),party:$('fParty').value.trim()};
+  if(!(parseFloat(p['in'])>0)&&!(parseFloat(p.out)>0)){$('ferr').textContent='اكتب مبلغ الوارد أو المنصرف';return;}
+  if(!p.desc&&!noDescAsk){noDescAsk=1;$('ferr').textContent='⚠️ البيان فارغ — اكتب بياناً، أو اضغط «تسجيل» مرة ثانية للحفظ بلا بيان';$('fDesc').focus();return;}
   if(S.edit)p.id=S.edit;
   $('fBtn').disabled=true;$('ferr').textContent='';
-  rpc('cd_save',{p_acc:S.acc,p:p}).then(function(){$('fBtn').disabled=false;toast(S.edit?'✅ حُفظ التعديل':'✅ سُجّل الصف');editRow(0);load();$('fIn').focus();},
+  rpc('cd_save',{p_acc:S.acc,p:p}).then(function(r){$('fBtn').disabled=false;toast(r&&r.redo?'✅ حُفظ التعديل — عادت الحركة للمراجعة':S.edit?'✅ حُفظ التعديل':'✅ سُجّلت الحركة');editRow(0);load();$('fIn').focus();},
     function(e){$('fBtn').disabled=false;$('ferr').textContent=e.message;});
 };
 var delAsk=0;
 window.delRow=function(id){
   if(delAsk!==id){delAsk=id;toast('اضغط 🗑️ مرة ثانية لتأكيد الحذف');setTimeout(function(){if(delAsk===id)delAsk=0;},4000);return;}
-  delAsk=0;rpc('cd_del',{p_acc:S.acc,p_id:id}).then(function(){toast('🗑️ حُذف الصف');load();},function(e){toast(e.message);});
+  delAsk=0;rpc('cd_del',{p_acc:S.acc,p_id:id}).then(function(){toast('🗑️ حُذفت الحركة');load();},function(e){toast(e.message);});
 };
-document.addEventListener('keydown',function(e){if(e.key==='Enter'){if(!$('login').hidden)doLogin();else if(e.target&&/^f(Date|In|Out|Desc|Party)$/.test(e.target.id))saveRow();}});
-setInterval(function(){if(S.tok&&!document.hidden)load();},60000);
+window.hist=function(id){
+  $('ovB').innerHTML='<b>🕘 سجل الحركة</b><div style="padding:14px;color:#64748b">⏳</div>';$('ov').hidden=false;
+  rpc('cd_history',{p_acc:S.acc,p_id:id}).then(function(h){var rs=(h&&h.rows)||[];
+    $('ovB').innerHTML='<b>🕘 سجل الحركة</b>'+(rs.length?rs.map(function(x){return '<div style="border-bottom:1px solid #eef2f6;padding:7px 0;font-size:13.5px"><div><b>'+esc(x.action)+'</b> — '+esc(x.user)+' <span class="num" style="color:#64748b;font-size:12px">'+esc(x.ts)+'</span></div>'+(x.old&&x.old!=='-'?'<div style="color:#b91c1c">قبل: '+esc(x.old)+'</div>':'')+(x['new']&&x['new']!=='-'?'<div style="color:#15803d">بعد: '+esc(x['new'])+'</div>':'')+'</div>';}).join(''):'<div style="padding:14px;color:#64748b">لا سجلات بعد</div>')+(h&&h.pending?'<div style="color:#92400e;font-size:12.5px;margin-top:6px">⏳ '+h.pending+' عملية حديثة تُضاف للسجل خلال دقيقة</div>':'');
+  },function(e){$('ovB').innerHTML='<div class="err">'+esc(e.message)+'</div>';});
+};
+document.addEventListener('keydown',function(e){if(e.key==='Enter'){if(!$('login').hidden)doLogin();else if(e.target&&/^f(Date|In|Out|Desc|Party)$/.test(e.target.id)){if(e.target.id==='fDate')fixDate(e.target);saveRow();}}});
+setInterval(function(){if(S.tok&&!document.hidden&&!S.edit&&!Object.keys(V.flt).some(function(k){return V.flt[k];})&&document.activeElement&&!/^f/.test(document.activeElement.id||''))load();},60000);
 resume().then(function(ok){if(ok)start();else show(false);});
 })();
 </script>
