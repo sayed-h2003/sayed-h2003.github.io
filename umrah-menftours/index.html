@@ -115,11 +115,11 @@
   <script>
     /* 🌐 (V4.602) المرحلة 2 — البرنامج من Supabase بدل Apps Script: الصفحة تجلب ملف البرنامج من دالة «app» (مرة لكل إصدار، ثم من ذاكرة الجهاز)
        وتضعه في الإطار نفسه (srcdoc) — كل جسور الإطار (الصور، المفتاح، العنوان) كما هي. أي تعذّر ⇒ المسار القديم (Apps Script) تلقائياً.
-       التفعيل: ?host=db (يُحفظ بالجهاز) · الرجوع: ?host=as */
+       (V4.603) افتراضي للجميع · الرجوع لـ Apps Script: ?host=as (يُحفظ بالجهاز) · العودة: ?host=db */
     (function () {
       var LS = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } };
       try { var h = new URLSearchParams(location.search).get('host'); if (h === 'db' || h === 'as') LS('app_host', h); } catch (e) {}
-      window.appHostDb_ = function () { return LS('app_host') === 'db' && 'caches' in window && typeof fetch === 'function'; };
+      window.appHostDb_ = function () { return LS('app_host') !== 'as' && 'caches' in window && typeof fetch === 'function'; };   // (V4.603) الافتراضي: من Supabase · ?host=as للرجوع
       var cfg = function (asBase) {
         var u = LS('app_fn'); if (u && /^https:\/\/[a-z0-9]+\.supabase\.co\/functions\/v1\/app$/.test(u)) return Promise.resolve(u);
         return fetch(asBase.split('?')[0] + '?appcfg=1', { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
