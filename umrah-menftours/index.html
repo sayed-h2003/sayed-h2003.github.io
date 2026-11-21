@@ -128,7 +128,7 @@
       var withTimeout = function (p, ms) { return Promise.race([p, new Promise(function (_, rj) { setTimeout(function () { rj(new Error('timeout')); }, ms); })]); };
       window.appLoadDb_ = function (fr, asSrc) {
         var t0 = Date.now(), fellBack = false;
-        var fallback = function (why) { if (fellBack) return; fellBack = true; try { console.warn('app: المسار القديم —', why); } catch (e) {} LS('app_last_err', String(why).slice(0, 200)); fr.removeAttribute('srcdoc'); fr.src = asSrc; };
+        var fallback = function (why) { if (fellBack) return; fellBack = true; try { console.warn('app: المسار القديم —', why); } catch (e) {} LS('app_last_err', String(why).slice(0, 200)); fr.removeAttribute('srcdoc'); fr.src = window.__asWhy ? window.__asWhy(asSrc, why) : asSrc; };
         /* ⚡ (V4.616) النسخة المحفوظة بالجهاز تُعرض فوراً (بلا انتظار الشبكة)، والتحقق من الإصدار وتنزيل الجديد بالخلفية للفتح التالي —
            والبرنامج نفسه ينبّه بوجود إصدار أحدث. أول فتح للجهاز (لا نسخة محفوظة) ينزّل الملف كما كان. */
         var FNRX = /^https:\/\/[a-z0-9]+\.supabase\.co\/functions\/v1\/app$/;
@@ -183,7 +183,8 @@
       try { var q = new URLSearchParams(location.search); go = q.get('go') || ''; ho = q.get('ho') || ''; } catch (e) {}
       var asSrc = go ? base + (base.indexOf('?') > -1 ? '&' : '?') + 'go=' + encodeURIComponent(go) + (ho ? '&ho=' + encodeURIComponent(ho) : '') : base;
       window.__asSrc = asSrc;
-      if (window.appHostDb_()) window.appLoadDb_(fr, asSrc); else fr.src = asSrc;
+      window.__asWhy = function (src, why) { return src + (src.indexOf('?') > -1 ? '&' : '?') + 'hw=' + encodeURIComponent(String(why || '').slice(0, 80)); };   // (V4.621) سبب الرجوع لـ Apps Script يظهر بجوار رقم الإصدار
+      if (window.appHostDb_()) window.appLoadDb_(fr, asSrc); else fr.src = window.__asWhy(asSrc, (function () { try { return localStorage.getItem('app_host') === 'as' ? 'host=as' : (!('caches' in window) ? 'no-caches' : 'no-fetch'); } catch (e) { return 'no-storage'; } })());
       if (ho && !window.appHostDb_()) { try { history.replaceState(null, '', location.pathname + '?go=' + encodeURIComponent(go)); } catch (e) {} }   // الرمز لمرة واحدة — لا يبقى بشريط العنوان
       fr.addEventListener('load', function () { try { var _w = ''; try { _w = localStorage.getItem('app_host') === 'as' ? 'host=as' : (localStorage.getItem('app_last_err') || ''); } catch (eW) {} fr.contentWindow.postMessage({ type: 'mf-wrap', url: location.origin + location.pathname, why: _w }, '*'); } catch (e) {} });
     })();

@@ -43,6 +43,17 @@ th{cursor:grab;user-select:none;white-space:nowrap}th.dg{opacity:.4}tr.flt td{ba
 td.d{min-width:240px;white-space:normal}tr.redo td{background:#fff1f2}.t3{background:#ffe4e6;color:#9f1239}.t4{background:#e2e8f0;color:#334155}
 .ov{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:30;display:flex;align-items:center;justify-content:center;padding:14px}.dlg{background:#fff;border-radius:12px;padding:14px;max-width:560px;width:100%;max-height:86vh;overflow:auto}
 @media(min-width:761px){.frm{grid-template-columns:170px 110px 110px 100px minmax(0,1fr) auto}.frm.pt{grid-template-columns:170px 110px 110px 100px minmax(0,1.4fr) minmax(0,1fr) auto}}
+#mfDatePick{position:fixed;z-index:2147483600;background:#fff;border:1px solid #cbd5e1;border-radius:11px;box-shadow:0 18px 50px rgba(15,23,42,.28);padding:9px;display:none;width:248px}
+#mfDatePick.show{display:block}#mfDatePick .dh{display:flex;align-items:center;gap:4px;margin-bottom:7px}
+#mfDatePick .dh button{background:none;border:1px solid #e2e8f0;border-radius:7px;cursor:pointer;font-size:12px;padding:1px 7px}
+#mfDatePick .dh select{font-size:11px;padding:2px 4px;border-radius:7px;border:1px solid #e2e8f0;background:#f8fafc;width:auto}#mfDatePick .dh select.mo{flex:1}
+#mfDatePick .dg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}#mfDatePick .dw{font-size:9px;font-weight:800;color:#94a3b8;text-align:center;padding:2px 0}
+#mfDatePick .dd{font-size:11px;text-align:center;padding:4px 0;border-radius:6px;cursor:pointer;border:1px solid transparent;background:none;color:#0f172a;font-family:inherit}
+#mfDatePick .dd:hover{background:#dbeafe;color:#2563eb}#mfDatePick .dd.other{color:#94a3b8;opacity:.4}#mfDatePick .dd.today{border-color:#2563eb;font-weight:800}
+#mfDatePick .dd.we{color:#c2670a;font-weight:800}#mfDatePick .dd.sel{background:#1e3d59;color:#fff;font-weight:800}
+#mfDatePick .df{display:flex;gap:5px;margin-top:7px}#mfDatePick .df button{flex:1;font-size:10.5px;font-weight:700;padding:4px;border-radius:7px;border:1px solid #cbd5e1;background:#fff;cursor:pointer}
+.mf-date{display:flex;align-items:center;gap:2px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;padding-inline-end:4px}.mf-date input{border:none!important;background:none!important;outline:none!important}
+.mf-date button{background:none;border:none;cursor:pointer;font-size:14px;color:#64748b;padding:2px 4px}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -61,7 +72,7 @@ td.d{min-width:240px;white-space:normal}tr.redo td{background:#fff1f2}.t3{backgr
     <div id="kp" class="kp" style="margin-bottom:12px"></div>
     <div class="card">
       <div id="frm" class="frm">
-        <div class="w2"><label>التاريخ</label><div style="display:flex;gap:4px"><input id="fDate" class="num" placeholder="dd/mm/yyyy" inputmode="numeric" onblur="fixDate(this)"><button type="button" class="btn b3" style="padding:7px 9px" title="التقويم" onclick="pickCal()">📅</button><input id="fCal" type="date" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" tabindex="-1" onchange="calPicked(this)"></div></div>
+        <div class="w2"><label>التاريخ</label><div class="mf-date"><input id="fDate" class="num" maxlength="10" placeholder="dd/mm/yyyy" inputmode="numeric" onblur="fixDate(this)"><button type="button" title="التقويم" onclick="mfPickDate('fDate',event)">📅</button></div></div>
         <div><label>وارد</label><input id="fIn" class="num" inputmode="decimal" oninput="chkBoth()"></div>
         <div><label>منصرف</label><input id="fOut" class="num" inputmode="decimal" oninput="chkBoth()"></div>
         <div><label>العملة</label><select id="fCur"><option value="SAR">ريال</option><option value="EGP">جنيه</option><option value="USD">دولار</option></select></div>
@@ -76,6 +87,7 @@ td.d{min-width:240px;white-space:normal}tr.redo td{background:#fff1f2}.t3{backgr
   </div>
 </div>
 <div id="ov" class="ov" hidden onclick="if(event.target===this)this.hidden=true"><div class="dlg"><div id="ovB"></div><div style="text-align:left;margin-top:10px"><button class="btn b3" onclick="document.getElementById('ov').hidden=true">إغلاق</button></div></div></div>
+<div id="mfDatePick"></div>
 <div id="msg" class="msg"></div>
 <script>
 (function(){
@@ -188,8 +200,38 @@ window.fixDate=function(el){
   if(dd<1||dd>31||mm<1||mm>12)return false;
   el.value=('0'+dd).slice(-2)+'/'+('0'+mm).slice(-2)+'/'+yy;return true;
 };
-window.pickCal=function(){var c=$('fCal'),m=$('fDate').value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(m)c.value=m[3]+'-'+m[2]+'-'+m[1];try{c.style.pointerEvents='auto';if(c.showPicker)c.showPicker();else{c.focus();c.click();}}catch(e){c.focus();}};
-window.calPicked=function(c){var m=String(c.value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)$('fDate').value=m[3]+'/'+m[2]+'/'+m[1];c.style.pointerEvents='none';};
+/* 📅 (V4.621) تقويم البرنامج الموحّد نفسه (#mfDatePick من شاشات البرنامج): نفس الشكل والأزرار — اليوم · مسح · إغلاق */
+var MFDP={el:null,y:0,m:0},MF_MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],MF_DOW=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+function p2(n){return(n<10?'0':'')+n;}
+function dms(v){var m=String(v||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1]).getTime():NaN;}
+window.mfPickDate=function(id,ev){
+  if(ev&&ev.stopPropagation)ev.stopPropagation();var el=$(id);if(!el)return;fixDate(el);MFDP.el=el;
+  var m=el.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/),t=new Date();MFDP.y=m?+m[3]:t.getFullYear();MFDP.m=m?+m[2]-1:t.getMonth();
+  mfDpRender();var box=$('mfDatePick');box.classList.add('show');
+  var r=((ev&&ev.currentTarget)||el).getBoundingClientRect(),bw=248,bh=box.offsetHeight||290;
+  box.style.left=Math.max(6,Math.min(window.innerWidth-bw-6,r.right-bw))+'px';
+  box.style.top=((r.bottom+bh+8>window.innerHeight)?Math.max(6,r.top-bh-6):(r.bottom+6))+'px';
+};
+window.mfDpRender=function(){
+  var box=$('mfDatePick'),sel=dms(MFDP.el?MFDP.el.value:''),t=new Date(),today=new Date(t.getFullYear(),t.getMonth(),t.getDate()).getTime();
+  var sd=new Date(MFDP.y,MFDP.m,1).getDay(),dim=new Date(MFDP.y,MFDP.m+1,0).getDate(),pd=new Date(MFDP.y,MFDP.m,0).getDate();
+  var h='<div class="dh"><button type="button" onclick="mfDpNav(-1)" title="الشهر السابق">‹</button><select class="mo" onchange="MFDPset(\'m\',+this.value)">'+MF_MONTHS.map(function(n,i){return '<option value="'+i+'"'+(i===MFDP.m?' selected':'')+'>'+n+'</option>';}).join('')+'</select><select onchange="MFDPset(\'y\',+this.value)">';
+  var y0=t.getFullYear()-3;for(var y=y0;y<=y0+10;y++)h+='<option value="'+y+'"'+(y===MFDP.y?' selected':'')+'>'+y+'</option>';
+  h+='</select><button type="button" onclick="mfDpNav(1)" title="الشهر التالي">›</button></div><div class="dg">';
+  MF_DOW.forEach(function(d){h+='<div class="dw">'+d+'</div>';});
+  for(var i=0;i<sd;i++)h+='<button type="button" class="dd other" disabled>'+(pd-sd+i+1)+'</button>';
+  for(var d=1;d<=dim;d++){var ms=new Date(MFDP.y,MFDP.m,d).getTime(),dw=new Date(MFDP.y,MFDP.m,d).getDay();
+    h+='<button type="button" class="dd'+((dw===5||dw===6)?' we':'')+(ms===today?' today':'')+(ms===sel?' sel':'')+'" onclick="mfDpPick('+d+')">'+d+'</button>';}
+  h+='</div><div class="df"><button type="button" onclick="mfDpToday()">اليوم</button><button type="button" onclick="mfDpClear()">مسح</button><button type="button" onclick="mfDpClose()">إغلاق</button></div>';
+  box.innerHTML=h;
+};
+window.MFDPset=function(k,v){MFDP[k]=v;mfDpRender();};
+window.mfDpNav=function(k){MFDP.m+=k;if(MFDP.m<0){MFDP.m=11;MFDP.y--;}if(MFDP.m>11){MFDP.m=0;MFDP.y++;}mfDpRender();};
+window.mfDpPick=function(d){MFDP.el.value=p2(d)+'/'+p2(MFDP.m+1)+'/'+MFDP.y;mfDpClose();};
+window.mfDpToday=function(){var t=new Date();MFDP.el.value=p2(t.getDate())+'/'+p2(t.getMonth()+1)+'/'+t.getFullYear();mfDpClose();};
+window.mfDpClear=function(){MFDP.el.value='';mfDpClose();};
+window.mfDpClose=function(){$('mfDatePick').classList.remove('show');};
+document.addEventListener('mousedown',function(e){var b=$('mfDatePick');if(b&&b.classList.contains('show')&&!b.contains(e.target)&&!(e.target.closest&&e.target.closest('.mf-date')))mfDpClose();});
 window.chkBoth=function(){var a=parseFloat($('fIn').value)||0,b=parseFloat($('fOut').value)||0;$('ferr').textContent=a>0&&b>0?'⚠️ لا يُسجَّل وارد ومنصرف في حركة واحدة — امسح أحدهما وسجّل الآخر في حركة مستقلة':'';return !(a>0&&b>0);};
 window.editRow=function(id){
   S.edit=id||0;var r=id&&S.d?(S.d.rows||[]).filter(function(x){return x.id===id;})[0]:null;
