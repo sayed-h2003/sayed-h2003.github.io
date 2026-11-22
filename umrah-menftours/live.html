@@ -107,6 +107,7 @@ tr.det>td{background:#fbfcfe;padding:4px 14px 14px}
 <script>
 (function(){
 'use strict';
+try{var _v=(location.search.match(/[?&]v=([0-9.]+)/)||[])[1];if(_v){var _h=document.querySelector('.top h1');if(_h)_h.insertAdjacentHTML('beforeend',' <small style="font-size:11px;opacity:.7;font-weight:400">V'+_v+'</small>');}}catch(e){}
 var LS=function(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}};
 var PUB=null;try{PUB=JSON.parse(LS('lf_supa_pub')||'null');}catch(e){PUB=null;}
 var TOK=LS('authToken'),S={rows:[],head:0,upto:0,read:{},open:{},fresh:{},cat:'',busy:false,fails:0};
