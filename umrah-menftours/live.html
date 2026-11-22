@@ -130,6 +130,10 @@ function renew(){if(!tokOk())return;rpc('app_renew',{},TOK).then(function(j){if(
 function cat(r){var t=String(r.typ||'')+' '+String(r.action||''),rec=String(r.record||'');
   if(/حذف|إلغاء|الغاء/.test(t))return 'del';if(/^MF:/.test(rec)||/وزارة/.test(t))return 'mf';if(/^VZ:/.test(rec)||/تأشير/.test(t))return 'vz';
   if(/^GL:|^JE-|^REC-|^PAY-/.test(rec)||/قيد|سند|عهدة|خزينة|حساب/.test(t))return 'gl';if(/حجز|إشعار|اشعار|دفعة/.test(t))return 'bk';if(/رحلة|معتمر|كشف|تسكين/.test(t))return 'tr';return 'ot';}
+var NK={new_client:['👤 عميل جديد على رحلة','trips','الرحلات'],acct_change:['⚠️ تغيّر تسكين / عدد / فندق','accounts','حسابات العملاء'],mf_new:['🏛️ تسجيل ملف مراجعة وزارة','ministry','ملفات الوزارة'],mf_reviewed:['✅ مراجعة ملف وزارة','ministry','ملفات الوزارة'],vz_saved:['🛂 مجموعة تأشيرات','visas','التأشيرات'],hb_new_party:['🆕 اسم جديد بالحجوزات غير مربوط','hbn','الحجوزات والفنادق']};
+var CI={gl:'🧾',bk:'🏨',tr:'🧳',mf:'🏛️',vz:'🛂',del:'🗑️',ot:'🔔'},CP={mf:['ministry','ملفات الوزارة'],vz:['visas','التأشيرات'],tr:['trips','الرحلات']};
+// نفس صيغة تنبيهات الجرس: نص التنبيه المسجَّل لهذه الحركة إن وُجد، وإلا جملة بنفس الشكل (الحركة — السجل — بواسطة المستخدم)
+function msgOf(r){if(r.nt&&r.nt.msg)return r.nt.msg;var rec=r.record&&r.record!=='-'?r.record:'';return (CI[r.c]||'🔔')+' '+(r.action||r.typ||'')+(rec?' — '+rec:'')+(r.user?' — بواسطة '+r.user:'');}
 function isRead(r){return r.id<=S.upto||!!S.read[r.id];}
 function avc(u){var h=0;u=String(u||'');for(var i=0;i<u.length;i++)h=(h*31+u.charCodeAt(i))%360;return 'hsl('+h+',52%,42%)';}
 function pull(){
@@ -162,27 +166,37 @@ function draw(){
   var H='',n=0;
   S.rows.forEach(function(r){
     var rd=isRead(r);if(un&&rd)return;if(fu&&r.user!==fu)return;if(S.cat&&r.c!==S.cat)return;
-    if(q&&(r.user+' '+r.action+' '+r.record+' '+JSON.stringify(r.det||[])).toLowerCase().indexOf(q)<0)return;
+    if(q&&(r.user+' '+r.action+' '+r.record+' '+msgOf(r)+' '+JSON.stringify(r.det||[])).toLowerCase().indexOf(q)<0)return;
     n++;var op=!!S.open[r.id],fr=S.fresh[r.id]&&Date.now()-S.fresh[r.id]<6000,ts=String(r.ts||'');
     H+='<tr class="row'+(rd?' rd':' un')+(fr?' fresh':'')+'" onclick="tog('+r.id+')">'+
       '<td class="c-tm tm">'+esc(ts.slice(11,16))+' <small>'+esc(ts.slice(8,10)+'/'+ts.slice(5,7))+'</small></td>'+
       '<td class="c-usr"><span class="usr"><span class="av" style="background:'+avc(r.user)+'">'+esc(String(r.user||'?').slice(0,1).toUpperCase())+'</span>'+esc(r.user||'')+'</span></td>'+
       '<td class="c-tag"><span class="tag t-'+r.c+'">'+CN[r.c]+'</span></td>'+
-      '<td class="c-act act">'+esc(r.action||r.typ||'')+'</td>'+
-      '<td class="c-rec rec">'+esc(r.record&&r.record!=='-'?r.record:'')+'</td>'+
-      '<td class="c-cnt"><span class="cnt" title="عدد التغييرات">'+r.n+'</span> <span style="color:#94a3b8">'+(op?'▲':'▼')+'</span></td>'+
+      '<td class="c-act act" style="white-space:normal;line-height:1.75">'+esc(msgOf(r))+' <a style="color:#2563eb;font-size:12px;white-space:nowrap;cursor:pointer">↗ التفاصيل</a></td>'+
       '<td class="c-mk"><button class="mk" title="'+(rd?'إرجاعه غير مقروء':'تعليمه مقروءاً')+'" onclick="event.stopPropagation();mark('+r.id+')">'+(rd?'↩':'✓')+'</button></td></tr>';
-    if(op)H+='<tr class="det"><td colspan="7"><table class="dt"><thead><tr><th style="width:34%">الحركة / الحقل</th><th>قبل</th><th>بعد</th></tr></thead><tbody>'+
-      (r.det||[]).map(function(d){return '<tr><td>'+esc((d.a&&d.a!==r.action?d.a+' — ':'')+(d.f&&d.f!=='-'?d.f:'')+(d.r&&d.r!==r.record&&d.r!=='-'?' ('+d.r+')':''))+'</td><td class="o">'+esc(d.o||'')+'</td><td class="n">'+esc(d.n||'')+'</td></tr>';}).join('')+
-      (r.n>(r.det||[]).length?'<tr><td colspan="3" style="color:#64748b">… و'+(r.n-r.det.length)+' تغييراً آخر (التفاصيل الكاملة بسجل التعديلات بالبرنامج)</td></tr>':'')+'</tbody></table></td></tr>';
   });
   var w=document.getElementById('wrap'),st=w.scrollTop;
-  w.innerHTML=n?'<table class="tbl"><thead><tr><th>الوقت</th><th>المستخدم</th><th>النوع</th><th>الحركة</th><th>السجل</th><th>تغييرات</th><th></th></tr></thead><tbody>'+H+'</tbody></table>':'<div class="empty">'+(un?'✅ لا يوجد غير مقروء':'لا توجد حركات مطابقة')+'</div>';
+  w.innerHTML=n?'<table class="tbl"><thead><tr><th>الوقت</th><th>المستخدم</th><th>النوع</th><th>التنبيه</th><th></th></tr></thead><tbody>'+H+'</tbody></table>':'<div class="empty">'+(un?'✅ لا يوجد غير مقروء':'لا توجد حركات مطابقة')+'</div>';
   w.scrollTop=st;
 }
 window.draw=draw;
 window.setCat=function(c){S.cat=c;draw();};
-window.tog=function(id){S.open[id]=!S.open[id];if(S.open[id]){var r=S.rows.filter(function(x){return x.id===id;})[0];if(r&&!isRead(r)){S.read[id]=1;rpc('live_read_set',{p:{add:[id]}},TOK).catch(function(){});}}draw();};
+window.dlgClose=function(){var o=document.getElementById('lfDlg');if(o)o.remove();};
+window.go=function(pg){dlgClose();try{if(window.parent&&window.parent!==window)window.parent.postMessage({lf:'go',page:pg},'*');}catch(e){}};
+// نافذة التفاصيل — نفس نافذة تفاصيل تنبيه الجرس (النص · الوقت · العميل · الرحلة · فتح الشاشة) + جدول التغييرات
+window.tog=function(id){var r=S.rows.filter(function(x){return x.id===id;})[0];if(!r)return;
+  if(!isRead(r)){S.read[id]=1;rpc('live_read_set',{p:{add:[id]}},TOK).catch(function(){});draw();}
+  var nt=r.nt||{},k=NK[nt.type]||null,pg=k?[k[1],k[2]]:CP[r.c],ts=String(r.ts||''),row=function(l,v){return v?'<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px dashed #e5e7eb"><span style="color:#64748b;min-width:74px;font-size:12px">'+l+'</span><b style="font-size:13px;overflow-wrap:anywhere">'+esc(v)+'</b></div>':'';};
+  var det=(r.det||[]).filter(function(d){return (d.f&&d.f!=='-')||d.o||d.n;});
+  var o=document.createElement('div');o.id='lfDlg';o.dir='rtl';o.style.cssText='position:fixed;inset:0;z-index:99;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:12px';
+  o.onclick=function(e){if(e.target===o)dlgClose();};
+  o.innerHTML='<div style="background:#fff;border-radius:16px;max-width:620px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.3)">'+
+    '<div style="background:linear-gradient(90deg,#0f3d3e,#12263f);color:#fff;padding:12px 16px;border-radius:16px 16px 0 0;display:flex;align-items:center;gap:8px"><b style="flex:1;font-size:16px">'+esc(k?k[0]:(CI[r.c]||'🔔')+' '+(r.action||CN[r.c]||'حركة'))+'</b><button class="btn g" onclick="dlgClose()">✕</button></div>'+
+    '<div style="padding:14px 16px"><div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14.5px;line-height:1.9;white-space:pre-wrap;word-break:break-word">'+esc(msgOf(r))+'</div>'+
+    '<div style="margin-top:8px">'+row('الوقت',ts.slice(8,10)+'/'+ts.slice(5,7)+'/'+ts.slice(0,4)+' '+ts.slice(11,16))+row('المستخدم',r.user)+row('العميل',nt.client)+row('الرحلة',nt.trip)+row('السجل',r.record&&r.record!=='-'?r.record:'')+'</div>'+
+    (det.length?'<table class="dt"><thead><tr><th style="width:34%">الحركة / الحقل</th><th>قبل</th><th>بعد</th></tr></thead><tbody>'+det.map(function(d){return '<tr><td>'+esc((d.a&&d.a!==r.action?d.a+' — ':'')+(d.f&&d.f!=='-'?d.f:'')+(d.r&&d.r!==r.record&&d.r!=='-'?' ('+d.r+')':''))+'</td><td class="o">'+esc(d.o||'')+'</td><td class="n">'+esc(d.n||'')+'</td></tr>';}).join('')+(r.n>(r.det||[]).length?'<tr><td colspan="3" style="color:#64748b">… و'+(r.n-r.det.length)+' تغييراً آخر (التفاصيل الكاملة بسجل التعديلات بالبرنامج)</td></tr>':'')+'</tbody></table>':'')+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">'+(pg&&window.parent!==window?'<button class="btn" style="background:#2563eb;color:#fff;border:0;padding:7px 14px;border-radius:9px;font-weight:700;cursor:pointer" onclick="go(\''+pg[0]+'\')">↗ فتح '+esc(pg[1])+'</button>':'')+'<button class="btn" style="background:#fff;border:1px solid #cbd5e1;padding:7px 14px;border-radius:9px;cursor:pointer" onclick="dlgClose()">إغلاق</button></div></div></div>';
+  dlgClose();document.body.appendChild(o);};
 window.mark=function(id){var r=S.rows.filter(function(x){return x.id===id;})[0];if(!r)return;
   if(isRead(r)){if(id<=S.upto)return;delete S.read[id];rpc('live_read_set',{p:{del:[id]}},TOK).catch(function(){});}else{S.read[id]=1;rpc('live_read_set',{p:{add:[id]}},TOK).catch(function(){});}draw();};
 window.readAll=function(){if(!S.rows.length)return;var top=S.rows[0].id;S.upto=Math.max(S.upto,top);S.read={};rpc('live_read_set',{p:{upto:top}},TOK).catch(function(){});draw();};
