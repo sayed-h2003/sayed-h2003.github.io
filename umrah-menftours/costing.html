@@ -1114,6 +1114,17 @@ td.k{color:var(--muted);font-size:12.5px}
 .dz.editing .esel > .eh{display:flex}
 .dz.editing > *:not(.esel) > .eh{display:none}
 .dz.editing .free:not(.esel) > .eh{display:none}
+.tgrid button{position:relative;padding-left:24px}
+.tgrid .fv{position:absolute;left:5px;top:50%;transform:translateY(-50%);font-style:normal;font-size:14px;color:#b0a27a;cursor:pointer;line-height:1}
+.tgrid .fv.on{color:#e0a100}
+.tgrid .fv.del{left:auto;right:auto;position:static;transform:none;margin-inline-start:6px;color:#b42318;font-size:11px}
+.tgrid button.ut{border-style:dashed}
+.tsub{font-size:12px;font-weight:700;color:var(--muted);margin:8px 0 4px}
+.lvord{display:flex;flex-direction:column;gap:4px;margin:6px 0}
+.lvo{display:flex;align-items:center;gap:6px;font-size:12.5px}
+.lvo span{flex:1}
+.lvo button{padding:1px 7px}
+.nlbox{display:flex;flex-direction:column;gap:10px;margin:12px 0}
 .dz .eh span{color:#ffffff;font-size:18px;line-height:1;padding:5px 8px;border-radius:6px;cursor:pointer;user-select:none}
 .dz .eh span:hover{background:#334155}
 .dz .eh span[data-a="drag"]{cursor:grab}
@@ -1134,12 +1145,13 @@ td.k{color:var(--muted);font-size:12.5px}
       <div class="sec">
         <div class="sec-h">🗂️ التكاليف المحفوظة</div>
         <div class="actions">
-          <button class="pri sm" id="btnNew">➕ تكلفة جديدة (من أقرب رحلة)</button>
+          <button class="pri sm" id="btnNew">➕ تكلفة جديدة</button>
           <button class="sm" id="btnSave">💾 حفظ</button>
           <button class="sm" id="btnCopy">📄 نسخة جديدة</button>
         </div>
         <div class="actions"><label for="copyFrom" class="hint">📥 نسخ البنود من:</label>
           <select id="copyFrom" style="flex:1;min-width:160px"></select><button class="sm" id="btnCopyFrom">نسخ هنا</button></div>
+        <div class="actions"><input id="listQ" type="search" placeholder="🔎 ابحث باسم الرحلة / التاريخ / الفندق…" style="flex:1;min-width:160px"><span class="hint" id="listN"></span></div>
         <div class="list" id="savedList"></div>
       </div>
 
@@ -1207,7 +1219,7 @@ td.k{color:var(--muted);font-size:12.5px}
         </div>
         <div class="row">
           <div class="f"><label for="cRoomT">نوع رسوم الغرفة</label><select id="cRoomT"><option>VIP</option><option>عادي</option><option>تجديد باركود</option></select></div>
-          <div class="f"><label for="cRoom">رسوم الغرفة (جنيه)</label><input id="cRoom" class="n" inputmode="decimal"></div>
+          <div class="f"><label for="cRoom">رسوم الغرفة (جنيه) <span class="hint" id="cRoomSrc"></span></label><input id="cRoom" class="n" inputmode="decimal"></div>
           <div class="f"><label for="cAdv">الدعاية والإعلان (جنيه)</label><input id="cAdv" class="n" inputmode="decimal"></div>
         </div>
       </div>
@@ -1223,6 +1235,14 @@ td.k{color:var(--muted);font-size:12.5px}
           <div class="f"><label for="sRoom">رسوم غرفة المشرف (جنيه)</label><input id="sRoom" class="n" inputmode="decimal"></div>
           <div class="f"><label for="sDaily">البدل لليوم (ريال)</label><input id="sDaily" class="n" inputmode="decimal"></div>
           <div class="f"><label for="sDays">أيام الإقامة</label><input id="sDays" class="n" inputmode="numeric"></div>
+        </div>
+        <div class="row" id="sRecRow">
+          <div class="f"><label for="sTkChg">تكلفة تعديل تذكرة المشرف (استقبال)</label><input id="sTkChg" class="n" inputmode="decimal" placeholder="0"></div>
+          <div class="f"><label for="sTkCur">العملة</label><select id="sTkCur"><option value="EGP">جنيه</option><option value="SAR">ريال</option></select></div>
+        </div>
+        <div class="row">
+          <div class="f"><label for="supMode">الإشراف على الفرد</label><select id="supMode"><option value="calc">محسوب من التكلفة</option><option value="fixed">مبلغ ثابت للفرد</option></select></div>
+          <div class="f" id="supFixW"><label for="supFixed">مبلغ الإشراف للفرد (جنيه)</label><input id="supFixed" class="n" inputmode="decimal"></div>
         </div>
         <div class="calc" id="supCalc"></div>
       </div>
@@ -1314,11 +1334,24 @@ td.k{color:var(--muted);font-size:12.5px}
     <img id="ovImg" alt="معاينة الصورة">
   </div>
 </div>
+<div class="ov" id="ov5" hidden>
+  <div class="dlg" style="max-width:640px">
+    <div class="top"><h2 style="flex:1">💰 تكلفة الرحلة</h2><button class="ghost" id="nlX">✕</button></div>
+    <div class="calc">الرحلة «<b id="nlName"></b>» <b>مش مرتبطة بأي تكلفة</b> لحد دلوقتي. تحب تعمل إيه؟</div>
+    <div class="nlbox">
+      <button class="pri" id="nlNew">➕ تكلفة جديدة لهذه الرحلة</button>
+      <div class="actions"><select id="nlSel" style="flex:1;min-width:220px"></select><button id="nlPick">🔗 ربط التكلفة المختارة بالرحلة</button></div>
+      <button class="ghost" id="nlClose">إغلاق بدون فتح التكلفة</button>
+    </div>
+    <div class="hint">الربط = تسجيل تسعير التكلفة على الرحلة الموجودة وقفل التكلفة كمرفق ليها (من نافذة «🚀 فتح الرحلة وتسجيل التسعير» — اسم الرحلة بيتملى تلقائياً).</div>
+  </div>
+</div>
 <div class="ov" id="ov2" hidden>
   <div class="dlg" style="max-width:760px">
     <div class="top"><h2 id="tpTitle" style="flex:1">🚀 فتح الرحلة في البرنامج وتسجيل تسعيرها</h2><button class="ghost" id="tpClose">✕ إغلاق</button></div>
     <div class="row">
-      <div class="f" style="grid-column:1/-1"><label for="tpName">اسم الرحلة في البرنامج (قابل للتعديل)</label><input id="tpName"></div>
+      <div class="f" style="grid-column:1/-1"><label for="tpName">اسم الرحلة في البرنامج — جديدة أو موجودة بالفعل</label><input id="tpName" list="tpTrips" autocomplete="off"><datalist id="tpTrips"></datalist>
+        <div class="hint" id="tpExist">💡 لربط التكلفة برحلة موجودة: اختار اسمها من القائمة (أو اكتبه بالظبط) ⇒ يتسجل التسعير عليها وتتقفل التكلفة كمرفق ليها. اسم جديد ⇒ تتفتح رحلة جديدة.</div></div>
       <div class="f"><label for="tpGo">الذهاب</label><input id="tpGo" class="d" placeholder="DD/MM/YYYY"></div>
       <div class="f"><label for="tpBack">العودة</label><input id="tpBack" class="d" placeholder="DD/MM/YYYY"></div>
       <div class="f"><label for="tpCo">الشركة المنفذة</label><select id="tpCo"><option>منف للسياحة الدولية</option><option>واي اتش ام ترافيل</option><option>ايجيبشيان</option></select></div>
@@ -1397,7 +1430,7 @@ td.k{color:var(--muted);font-size:12.5px}
     nMd: '', nMk: '', md: [{ name: 'ندى السلام / روضة المختارة', price: 450 }], levels: [{ name: 'بدر الماسة', price: 350, md: 0 }, { name: 'رويال بارك', price: 200, md: 0 }, { name: 'درة اسماء', price: 50, md: 0 }],
     roomType: 'VIP', quadLbl: 'رباعي', kbOn: false, kbFrom: 'quad', kbDisc: 2000, kAge: 'من 2 إلى 6', kbAge: 'من 6 إلى 12', addons: [], paxScen: '30, 40, 50', exp: {},
     pax: 40, rate: 15, rateSrc: '', visa: 485, bus: 2500, room: 3100, adv: 250,
-    sCount: 1, sType: 'mur', sLevel: -1, sRoom: 200, sDaily: 100, sDays: '',
+    sCount: 1, sType: 'mur', sLevel: -1, sRoom: 200, sDaily: 100, sDays: '', sTkChg: '', sTkCur: 'EGP', supMode: 'calc', supFixed: '', roomAuto: false,
     mOn: false, mAmt: 2000, co: 1500, rep: 3500, x3: 900, x2: 1700, x1: 1000, kTicket: '', kSale: 30000,
     iMode: 'calc', iTicket: 5000, iProfit: 1000, iFixed: 20000, files: [], extra: [], role: '' };
   var S, cur = null, store = [];
@@ -1415,7 +1448,7 @@ td.k{color:var(--muted);font-size:12.5px}
 
   var bind = [['tName', 'name'], ['goTime', 'goTime'], ['backTime', 'backTime'], ['tAir', 'air'], ['tRoute', 'route'], ['tRouteOther', 'routeOther'], ['tFlights', 'flights'], ['tTicket', 'ticket'],
     ['cPax', 'pax'], ['cRate', 'rate'], ['cVisa', 'visa'], ['cBus', 'bus'], ['cRoom', 'room'], ['cAdv', 'adv'],
-    ['sCount', 'sCount'], ['sType', 'sType'], ['sRoom', 'sRoom'], ['sDaily', 'sDaily'], ['sDays', 'sDays'],
+    ['sCount', 'sCount'], ['sType', 'sType'], ['sRoom', 'sRoom'], ['sDaily', 'sDaily'], ['sDays', 'sDays'], ['sTkChg', 'sTkChg'], ['sTkCur', 'sTkCur'], ['supMode', 'supMode'], ['supFixed', 'supFixed'],
     ['mAmt', 'mAmt'], ['pCo', 'co'], ['pRep', 'rep'], ['x3', 'x3'], ['x2', 'x2'], ['x1', 'x1'], ['kTicket', 'kTicket'], ['kSale', 'kSale'],
     ['iMode', 'iMode'], ['iTicket', 'iTicket'], ['iProfit', 'iProfit'], ['iFixed', 'iFixed'], ['kAge', 'kAge'], ['kbAge', 'kbAge'], ['kbFrom', 'kbFrom'], ['kbDisc', 'kbDisc'], ['paxScen', 'paxScen']];
 
@@ -1428,7 +1461,7 @@ td.k{color:var(--muted);font-size:12.5px}
     if (s.segs && s.segs.length) { s.levels.forEach(function (l) { l.h = l.h || {}; }); return s; }
     var md = s.md || [], lv = s.levels || [], sMd = { id: segId(), city: 'md', other: '', nights: s.nMd || '', shared: md.length < 2, hotel: newHotel({ name: (md[0] || {}).name || '', price: (md[0] || {}).price || '', dist: (md[0] || {}).dist || '' }) };
     var sMk = { id: segId(), city: 'mk', other: '', nights: s.nMk || '', shared: false, hotel: newHotel() };
-    s.segs = [sMk, sMd];
+    s.segs = [sMd, sMk];
     s.levels = lv.map(function (l) { var h = {}; h[sMk.id] = newHotel({ name: l.name || '', price: l.price || '', dist: l.dist || '' }); if (!sMd.shared) { var m = md[l.md || 0] || {}; h[sMd.id] = newHotel({ name: m.name || '', price: m.price || '' }); } return { label: l.label, name: l.name || '', h: h }; });
     delete s.md; delete s.nMd; delete s.nMk; return s;
   }
@@ -1477,8 +1510,8 @@ td.k{color:var(--muted);font-size:12.5px}
     var meals = S.mOn ? num(S.mAmt) : 0;
     var sl = supLevel(), slv = S.levels[sl] || { h: {} }, supLH = levelHotel(slv, N);
     var supHotel = supLH.H.quad;
-    var supOne = (supHotel + num(S.visa)) * R + num(S.sRoom) + (S.sType === 'mur' ? num(S.ticket) : 0);
-    var supPer = sc > 0 ? up100(supOne * sc / P) : 0;
+    var supOne = (supHotel + num(S.visa)) * R + num(S.sRoom) + (S.sType === 'mur' ? num(S.ticket) : num(S.sTkChg) * (S.sTkCur === 'SAR' ? R : 1));
+    var supPer = S.supMode === 'fixed' ? num(S.supFixed) : (sc > 0 ? up100(supOne * sc / P) : 0);
     var segLbl = function (id) { var i = -1; S.segs.forEach(function (sg, j) { if (sg.id === id) i = j; }); return i >= 0 ? ' — ' + segName(S.segs[i], i) : ''; };
     var levels = S.levels.map(function (l) {
       var LH = levelHotel(l, N), H = LH.H;
@@ -1580,7 +1613,7 @@ td.k{color:var(--muted);font-size:12.5px}
     S.levels.forEach(function (l, i) {
       var d = document.createElement('div'); d.className = 'lvc';
       var own = S.segs.map(function (sg, j) { if (sg.shared) return ''; var h = hotelOf(l, sg); HMAP['L' + i + sg.id] = h; HSEG['L' + i + sg.id] = j; return hotelEd(h, 'L' + i + sg.id, 'فندق ' + segName(sg, j)); }).join('');
-      d.innerHTML = '<div class="hrow"><b>المستوى ' + (i + 1) + '</b><div class="f" style="max-width:200px"><label>المسمّى</label><input data-l="label" value="' + esc(l.label != null ? l.label : (LBL0[i] || '')) + '"></div><span style="flex:1"></span>' +
+      d.innerHTML = '<div class="hrow"><b>المستوى ' + (i + 1) + '</b><div class="f" style="max-width:200px"><label>المسمّى</label><input data-l="label" value="' + esc(l.label != null ? l.label : (LBL0[i] || '')) + '" placeholder="' + esc(LBL0[i] || '') + '"></div><span style="flex:1"></span>' +
         '<button class="sm" data-l2="dup">⧉ تكرار</button><button class="sm del" data-l2="del">✕</button></div>' + (own || '<div class="hint">كل الفترات بفندق موحّد.</div>');
       lb.appendChild(d);
       d.querySelector('[data-l="label"]').addEventListener('input', function (e) { l.label = e.target.value; });
@@ -1671,6 +1704,8 @@ td.k{color:var(--muted);font-size:12.5px}
 
   function renderFiles() { $('files').innerHTML = (S.files || []).map(function (f, i) { var nm = typeof f === 'string' ? f : f.name, u = typeof f === 'object' && /^https:\/\//.test(f.url || '') ? f.url : ''; return '<span>📄 ' + (u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(nm) + '</a>' : esc(nm)) + ' <button class="sm ghost del" data-rf="' + i + '" style="padding:0 4px">✕</button></span>'; }).join(''); }
   function recalc() {
+    if ($('sRecRow')) { $('sRecRow').hidden = S.sType !== 'rec'; $('supFixW').hidden = S.supMode !== 'fixed'; }
+    roomAuto();
     var C = compute(), N = C.N;
     renderUmrah(); $('kbW').hidden = !S.kbOn; $('qlH').textContent = QL();
     $('iTicketW').hidden = S.iMode === 'fixed'; $('iProfitW').hidden = S.iMode === 'fixed'; $('iFixedW').hidden = S.iMode !== 'fixed';
@@ -1678,8 +1713,9 @@ td.k{color:var(--muted);font-size:12.5px}
     $('sDays').placeholder = String(C.days);
     $('sugTicket').innerHTML = sugHtml(ticketSug().filter(function (o) { return o.p !== num(S.ticket); }), 'tk');
     $('supCalc').innerHTML = 'المشرف على مستوى <b>' + esc(C.sup.name) + '</b>: (سكن ' + fmt2(C.sup.hotel) + ' + تأشيرة ' + fmt(num(S.visa)) + ') ريال × ' + fmt2(C.R) +
-      ' + غرفة ' + fmt(num(S.sRoom)) + (S.sType === 'mur' ? ' + تذكرة ' + fmt(num(S.ticket)) : ' (استقبال بدون تذكرة)') + ' = <b class="num">' + fmt(C.sup.one) + '</b> جنيه' +
+      ' + غرفة ' + fmt(num(S.sRoom)) + (S.sType === 'mur' ? ' + تذكرة ' + fmt(num(S.ticket)) : (num(S.sTkChg) ? ' + تعديل تذكرة ' + fmt(num(S.sTkChg)) + (S.sTkCur === 'SAR' ? ' ريال × ' + fmt2(C.R) : ' جنيه') + ' (استقبال)' : ' (استقبال بدون تذكرة)')) + ' = <b class="num">' + fmt(C.sup.one) + '</b> جنيه' +
       (num(S.sCount) > 1 ? ' × ' + num(S.sCount) : '') + ' ÷ ' + C.P + ' ⇒ <b class="num">' + fmt(C.sup.per) + '</b> للفرد (لأعلى 100) · أيام الإقامة ' + C.days;
+    if (S.supMode === 'fixed') $('supCalc').innerHTML += '<br>⚙️ <b>الإشراف على الفرد مبلغ ثابت: <span class="num">' + fmt(num(S.supFixed)) + '</span> جنيه</b> (بدل المحسوب أعلاه)';
     $('kidCalc').innerHTML = 'تكلفة الطفل الفعلية: ' + C.kid.lines.map(function (x) { return x[0] + ' ' + fmt(x[1]); }).join(' + ') + ' = <b class="num">' + fmt(C.kid.cost) + '</b> · ' +
       (C.kid.sale ? 'الربح <b class="num" style="color:var(' + (C.kid.sale - C.kid.cost >= 0 ? '--good' : '--bad') + ')">' + fmt(C.kid.sale - C.kid.cost) + '</b>' : 'اكتب سعر البيع');
     $('infCalc').innerHTML = 'الرضيع: تأشيرة + رسوم إعاشة ' + fmt(num(S.visa) * C.R) + ' + تذكرة ' + fmt(num(S.iTicket)) + ' = تكلفة <b class="num">' + fmt(C.inf.cost) + '</b> ⇒ سعر البيع <b class="num">' + fmt(C.inf.sale) + '</b>' + (S.iMode === 'fixed' ? ' (ثابت)' : ' (+ ربح ' + fmt(num(S.iProfit)) + '، لأعلى 100)');
@@ -1714,7 +1750,7 @@ td.k{color:var(--muted);font-size:12.5px}
   var FONTS = [['Cairo', 'كايرو'], ['Tajawal', 'تجوال'], ['Lalezar', 'لاله زار'], ['Reem Kufi', 'ريم كوفي'], ['El Messiri', 'المسيري'], ['Changa', 'تشانجا'], ['Marhey', 'مرحي'], ['Rakkas', 'رقّاص'], ['Aref Ruqaa', 'عارف رقعة'], ['Readex Pro', 'ريدكس']];
   var TPL = [['emerald', 'زمرّدي'], ['gold', 'ذهبي فاخر'], ['sky', 'أزرق'], ['rose', 'عنّابي'], ['plain', 'أبيض بسيط']];
   var IMG = { kind: 'cost', show: { sgl: false, dbl: true, tri: true, quad: true, kid: false, inf: false }, lv: {}, font: 'Cairo', tpl: 'emerald', title: '' };
-  try { var sv = JSON.parse(localStorage.getItem(LS + '.img') || 'null'); if (sv) { IMG.show = sv.show || IMG.show; IMG.font = sv.font || IMG.font; IMG.tpl = sv.tpl || IMG.tpl; IMG.noLbl = !!sv.noLbl; } } catch (e) {}
+  try { var sv = JSON.parse(localStorage.getItem(LS + '.img') || 'null'); if (sv) { IMG.show = sv.show || IMG.show; IMG.font = sv.font || IMG.font; IMG.tpl = sv.tpl || IMG.tpl; IMG.noLbl = !!sv.noLbl; IMG.colRev = !!sv.colRev; IMG.tripDesc = !!sv.tripDesc; } } catch (e) {}
   function chipsMeta(C) {
     var a = [];
     if (S.goDate) a.push('📅 ' + S.goDate + (S.backDate ? ' ← ' + S.backDate : ''));
@@ -1738,12 +1774,14 @@ td.k{color:var(--muted);font-size:12.5px}
     var cols = [['sgl', 'سنجل'], ['dbl', 'ثنائي'], ['tri', 'ثلاثي'], ['quad', QL()], ['kidb', 'طفل بسرير']].filter(function (c) { return IMG.show[c[0]] && (c[0] !== 'kidb' || S.kbOn); });
     IMG.trips = IMG.trips || { cur: true };
     var trips = [];
-    if (IMG.trips.cur !== false) { var t0 = tripCtx(S); t0.levels = t0.levels.filter(function (l, i) { return IMG.lv[i] !== false; }); trips.push(t0); }
+    if (IMG.trips.cur !== false) { var t0 = tripCtx(S), L0 = t0.levels, ord = (IMG.lvOrd || []).filter(function (i) { return L0[i]; }); L0.forEach(function (l, i) { if (ord.indexOf(i) < 0) ord.push(i); });
+      t0.levels = ord.filter(function (i) { return IMG.lv[i] !== false; }).map(function (i) { return L0[i]; }); trips.push(t0); }
+    if (IMG.colRev) cols = cols.slice().reverse();
     store.forEach(function (r) { if (r.id !== cur && IMG.trips[r.id]) trips.push(tripCtx(r.data)); });
     if (!trips.length) trips.push(tripCtx(S));
     var multi = trips.length > 1;
     var dk = function (t) { var d = dParse(t.go); return d ? d.getTime() : 9e15; };
-    if (multi) return sumA4(trips.sort(function (a, b) { return dk(a) - dk(b); }), cols);
+    if (multi) return sumA4(trips.sort(function (a, b) { return IMG.tripDesc ? dk(b) - dk(a) : dk(a) - dk(b); }), cols);
     var body = trips.map(function (t) {
       var ext = []; if (IMG.show.kid) ext.push(['👶 الطفل' + (t.kAge ? ' (' + esc(t.kAge) + ')' : ''), t.kid]); if (IMG.show.inf) ext.push(['🍼 الرضيع', t.inf]); (t.addons || []).forEach(function (a) { ext.push(['🎁 ' + esc(a.label) + ' (اختياري)', num(a.price)]); });
       return (multi ? '<div class="tb"><b>رحلة ' + esc(dlong(t.go) || t.name) + '</b><span>✈️ ' + esc(t.air) + ' · ' + esc(t.routeL) + ' · 🌙 ' + t.nights + ' ليلة (' + esc(t.segsTxt) + ')' + (t.umrahs >= 2 ? ' · 🕋🕋 عمرتين' : '') + (IMG.hijri && t.hijri ? ' · ' + esc(t.hijri) : '') + '</span></div>' : '') +
@@ -1788,7 +1826,9 @@ td.k{color:var(--muted);font-size:12.5px}
       o += '<div class="grp"><b>الرحلات في الصورة (دمج)</b><div class="actions"><label class="chk"><input type="checkbox" data-it="cur"' + (IMG.trips.cur !== false ? ' checked' : '') + '> ' + esc(S.trip ? S.trip.name : (S.name || 'الحالية')) + ' (الحالية)</label>' +
         store.filter(function (r) { return r.id !== cur; }).map(function (r) { return '<label class="chk"><input type="checkbox" data-it="' + r.id + '"' + (IMG.trips[r.id] ? ' checked' : '') + '> ' + esc(r.data.trip ? r.data.trip.name : r.data.name) + (r.data.role === 'draft' ? ' (مسودة)' : '') + '</label>'; }).join('') +
         (store.filter(function (r) { return r.id !== cur; }).length ? '' : '<span class="hint">احفظ تكاليف تانية عشان تظهر هنا وتدمجها.</span>') + '</div></div>';
-      o += '<div class="grp"><b>مستويات الرحلة الحالية</b><div class="actions">' + C.levels.map(function (l, i) { return '<label class="chk"><input type="checkbox" data-lv="' + i + '"' + (IMG.lv[i] !== false ? ' checked' : '') + '> ' + esc(l.name) + '</label>'; }).join('') + '</div></div>';
+      o += '<div class="grp"><b>مستويات الرحلة الحالية (الظهور والترتيب)</b>' + lvOrdHtml('io', IMG.lvOrd, function (i) { return '<input type="checkbox" data-lv="' + i + '"' + (IMG.lv[i] !== false ? ' checked' : '') + ' aria-label="إظهار"> '; }) +
+        '<label class="chk"><input type="checkbox" id="imgColRev"' + (IMG.colRev ? ' checked' : '') + '> ↔ عكس ترتيب أعمدة الأسعار (' + QL() + ' أولاً)</label>' +
+        '<label class="chk"><input type="checkbox" id="imgTripDesc"' + (IMG.tripDesc ? ' checked' : '') + '> الرحلات المدموجة: الأحدث أولاً</label></div>';
       o += '<div class="grp"><b>القالب</b><select id="imgTpl">' + TPL.map(function (t) { return '<option value="' + t[0] + '"' + (t[0] === IMG.tpl ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') + '</select>' +
         '<b>الخط</b><select id="imgFont">' + FONTS.map(function (f) { return '<option value="' + f[0] + '"' + (f[0] === IMG.font ? ' selected' : '') + ' style="font-family:\'' + f[0] + '\'">' + f[1] + '</option>'; }).join('') + '</select></div>';
       o += '<div class="grp"><b>العنوان في الصورة</b><input id="imgTitle" value="' + esc(IMG.title || S.name) + '"></div>';
@@ -1800,12 +1840,15 @@ td.k{color:var(--muted);font-size:12.5px}
     $('ovOpts').querySelectorAll('[id^="imL"]').forEach(function (x) { x.addEventListener('change', function () { S.levels[+x.dataset.li].label = x.value; draw(); }); });
     $('ovOpts').querySelectorAll('[data-it]').forEach(function (x) { x.addEventListener('change', function () { IMG.trips[x.dataset.it] = x.checked; draw(); }); });
     $('ovOpts').querySelectorAll('[data-lv]').forEach(function (x) { x.addEventListener('change', function () { IMG.lv[+x.dataset.lv] = x.checked; draw(); }); });
+    $('ovOpts').querySelectorAll('[data-io]').forEach(function (x) { x.addEventListener('click', function () { IMG.lvOrd = moveOrd(IMG.lvOrd, +x.dataset.i, +x.dataset.io); saveImg(); openImg('sum'); }); });
+    if ($('imgColRev')) $('imgColRev').addEventListener('change', function (e) { IMG.colRev = e.target.checked; saveImg(); draw(); });
+    if ($('imgTripDesc')) $('imgTripDesc').addEventListener('change', function (e) { IMG.tripDesc = e.target.checked; saveImg(); draw(); });
     if ($('imgTpl')) $('imgTpl').addEventListener('change', function (e) { IMG.tpl = e.target.value; saveImg(); draw(); });
     if ($('imgFont')) $('imgFont').addEventListener('change', function (e) { IMG.font = e.target.value; saveImg(); draw(); });
     if ($('imgTitle')) $('imgTitle').addEventListener('change', function (e) { IMG.title = e.target.value; draw(); });
     draw();
   }
-  function saveImg() { try { localStorage.setItem(LS + '.img', JSON.stringify({ show: IMG.show, font: IMG.font, tpl: IMG.tpl, noLbl: !!IMG.noLbl })); } catch (e) {} }
+  function saveImg() { try { localStorage.setItem(LS + '.img', JSON.stringify({ show: IMG.show, font: IMG.font, tpl: IMG.tpl, noLbl: !!IMG.noLbl, colRev: !!IMG.colRev, tripDesc: !!IMG.tripDesc })); } catch (e) {} }
   var lastBlob = null, drawN = 0;
   function draw() {
     var C = compute(), st = $('stage'), my = ++drawN;
@@ -1912,7 +1955,9 @@ td.k{color:var(--muted);font-size:12.5px}
       HIST.map(function (h, i) { return '<option value="h:' + i + '">📗 ' + esc(h.n) + ' (' + isoToDmy(h.d) + ')</option>'; }).join('');
     if (!store.length) { box.innerHTML = '<div class="hint">لا توجد تكاليف محفوظة بعد. المعروض الآن مبدئي من أقرب رحلة سابقة — عدّله واضغط «حفظ».</div>'; renderLog(); return; }
     var groups = {}; store.forEach(function (r) { var k = norm(r.data.name).replace(/^نسخه( \d+)? من /, ''); (groups[k] = groups[k] || []).push(r); });
-    box.innerHTML = store.slice().sort(function (a, b) { return b.ts - a.ts; }).map(function (r) {
+    var q = norm($('listQ').value), shown = store.slice().sort(function (a, b) { return b.ts - a.ts; }).filter(function (r) { return !q || norm(costText(r)).indexOf(q) >= 0; });
+    $('listN').textContent = q ? shown.length + ' من ' + store.length : store.length + ' تكلفة';
+    box.innerHTML = (shown.length ? '' : '<div class="hint">لا توجد تكلفة مطابقة للبحث.</div>') + shown.map(function (r) {
       var k = norm(r.data.name).replace(/^نسخه( \d+)? من /, ''), nv = groups[k].length;
       return '<div class="it' + (r.id === cur ? ' on' : '') + '"><div><div class="t">' + esc(r.data.name) + (nv > 1 ? ' <span class="tag">' + nv + ' نسخ</span>' : '') + (r.data.trip ? ' <span class="tag ' + (r.data.role === 'draft' ? 'semi">📝 مسودة: ' : 'fixed">🔒 ') + esc(r.data.trip.name) + '</span>' : '') + '</div><div class="m">أنشأها ' + esc(r.by) + ' ' + esc(r.at) +
         (r.eBy ? ' · آخر تعديل ' + esc(r.eBy) + ' ' + esc(r.eAt) : '') + (r.data.goDate ? ' · سفر ' + esc(r.data.goDate) : '') + '</div></div><div class="actions"><button class="sm" data-open="' + r.id + '">فتح</button>' + (CAN.del ? '<button class="sm del" data-rm="' + r.id + '">حذف</button>' : '') + '</div></div>';
@@ -1960,16 +2005,12 @@ td.k{color:var(--muted);font-size:12.5px}
   function applyHist(s, h) {
     s.route = h.r; s.ticket = h.t; s.rate = h.x || s.rate;
     var sMk = { id: segId(), city: 'mk', other: '', nights: h.mk[0] ? h.mk[0][2] : '', shared: false, hotel: newHotel() }, sMd = { id: segId(), city: 'md', other: '', nights: h.md[2] !== 3 ? h.md[2] : '', shared: true, hotel: newHotel({ name: h.md[0], price: h.md[1] }) };
-    s.segs = [sMk, sMd]; s.levels = h.mk.map(function (k) { var hh = {}; hh[sMk.id] = newHotel({ name: k[0], price: k[1] }); return { name: k[0], h: hh }; });
+    s.segs = [sMd, sMk]; s.levels = h.mk.map(function (k) { var hh = {}; hh[sMk.id] = newHotel({ name: k[0], price: k[1] }); return { name: k[0], h: hh }; });
     delete s.md; delete s.nMd; delete s.nMk;
     if (h.co) s.co = h.co; if (h.rep) s.rep = h.rep; return s;
   }
-  $('btnNew').addEventListener('click', function () {
-    cur = null; S = JSON.parse(JSON.stringify(DEF));
-    var n = nearest(); if (n) { if (n.own) { var r = store.filter(function (x) { return x.data.name === n.src; })[0]; if (r) S = Object.assign(S, JSON.parse(JSON.stringify(r.data))); } else S = applyHist(S, HIST.filter(function (h) { return h.n === n.src; })[0]); }
-    S.name = ''; S.goDate = ''; S.backDate = ''; S.goTime = ''; S.backTime = ''; S.flights = ''; S.files = []; delete S.trip; S.role = ''; normalize(S); S.segs.forEach(function (sg) { if (sg.city === 'mk') sg.nights = ''; });
-    fill(); renderList(); $('tName').focus(); toast(n ? '💡 بدأت من أقرب رحلة: ' + n.src : 'تكلفة جديدة');
-  });
+  $('btnNew').addEventListener('click', function () { newBlank(); fill(); renderList(); $('tName').focus(); toast('➕ تكلفة جديدة فاضية — اختار الفنادق من الاقتراحات أو «📥 نسخ البنود من» رحلة سابقة'); });
+
   $('btnAddLvl').addEventListener('click', function () { var c = JSON.parse(JSON.stringify(S.levels[S.levels.length - 1] || { h: {} })); c.label = ''; S.levels.push(c); renderHotels(); recalc(); });
   $('btnAddX').addEventListener('click', function () { (S.extra = S.extra || []).push({ label: '', amt: '', cur: 'EGP', mode: 'pp' }); renderExtras(); recalc(); });
   $('btnSegMk').addEventListener('click', function () { addSeg('mk'); });
@@ -1979,6 +2020,8 @@ td.k{color:var(--muted);font-size:12.5px}
   $('btnAddBus').addEventListener('click', function () { (S.extra = S.extra || []).push({ label: 'نقل إضافي', amt: '', cur: 'SAR', mode: 'total', seg: '' }); renderExtras(); recalc(); });
   $('btnAddOn').addEventListener('click', function () { (S.addons = S.addons || []).push({ label: '', price: '' }); renderAddons(); recalc(); });
   $('cRoomT').addEventListener('change', function (e) { S.roomType = e.target.value; recalc(); });
+  $('cRoom').addEventListener('input', function () { S.roomAuto = false; $('cRoomSrc').textContent = '(يدوي)'; });
+  $('sRoom').addEventListener('input', function () { S.sRoomMan = true; });
   $('kbOn').addEventListener('change', function (e) { S.kbOn = e.target.checked; recalc(); });
   $('quadLbl').addEventListener('change', function (e) { $('quadLblOW').hidden = e.target.value !== '__'; S.quadLbl = e.target.value === '__' ? ($('quadLblO').value || 'رباعي') : e.target.value; renderHotels(); recalc(); });
   $('quadLblO').addEventListener('input', function (e) { S.quadLbl = e.target.value || 'رباعي'; recalc(); });
@@ -2039,7 +2082,7 @@ td.k{color:var(--muted);font-size:12.5px}
     var C = compute(); TP = upd && S.trip ? JSON.parse(JSON.stringify(S.trip)) : null;
     var pr = pricingNow(C);
     $('tpTitle').textContent = upd ? (ren ? '✏️ تعديل اسم الرحلة المرتبطة' : '🔄 تحديث تسعير الرحلة المرتبطة') : '🚀 فتح الرحلة في البرنامج وتسجيل تسعيرها';
-    $('tpName').value = TP ? TP.name : (S.name || '').replace(/\s*\(مثال\)$/, '');
+    $('tpName').value = TP ? TP.name : (S.linkTo || (S.name || '').replace(/\s*\(مثال\)$/, '')); loadTripNames();
     $('tpGo').value = TP ? TP.go : S.goDate; $('tpBack').value = TP ? TP.back : S.backDate;
     var keys = ['عادي', 'ثلاثي', 'دابل', 'سنجل'], lab = { 'عادي': QL(), 'ثلاثي': 'ثلاثي', 'دابل': 'ثنائي', 'سنجل': 'سنجل' };
     $('tpTbl').innerHTML = '<thead><tr><th>المستوى (فندق مكة)</th>' + keys.map(function (k) { return '<th>' + lab[k] + '</th>'; }).join('') + '</tr></thead><tbody>' +
@@ -2103,8 +2146,8 @@ td.k{color:var(--muted);font-size:12.5px}
   var ST = { tpl: 'table', pal: 'sand', font: 'Cairo', trips: { cur: true }, show: { sgl: false, dbl: true, tri: true, quad: true, kid: false, inf: false },
     brand: 'menf', brand2: 'eht', title: 'برامج عمرة', sub: '', inc: INC0.join('\n'), req: REQ0.join('\n'), showInc: true, showReq: true, showDist: true, focus: -1, bg: '',
     offer: { to: 'السادة / ……………………… المحترمين', subject: 'عرض أسعار برامج العمرة', pre: 'تحية طيبة وبعد،\nيسعدنا أن نتقدم لسيادتكم بعرض أسعار برامج العمرة الموضحة أدناه، شاملة الطيران والإقامة والتأشيرة والانتقالات، آملين أن ينال رضاكم، ونحن على استعداد لتخصيص البرنامج حسب احتياجاتكم.', val: 'الأسعار بالجنيه المصري للفرد، سارية لمدة 7 أيام من تاريخه وحسب توافر الأماكن.', sign: 'مع خالص التحية،\nإدارة المبيعات' } };
-  try { var stg = JSON.parse(localStorage.getItem(LS + '.studio') || 'null'); if (stg) ['tpl', 'pal', 'font', 'show', 'brand', 'brand2'].forEach(function (k) { if (stg[k] !== undefined) ST[k] = stg[k]; }); } catch (e) {}
-  var saveSTg = function () { try { localStorage.setItem(LS + '.studio', JSON.stringify({ tpl: ST.tpl, pal: ST.pal, font: ST.font, show: ST.show, brand: ST.brand, brand2: ST.brand2 })); } catch (e) {} };
+  try { var stg = JSON.parse(localStorage.getItem(LS + '.studio') || 'null'); if (stg) ['tpl', 'pal', 'font', 'show', 'brand', 'brand2', 'colRev'].forEach(function (k) { if (stg[k] !== undefined) ST[k] = stg[k]; }); } catch (e) {}
+  var saveSTg = function () { try { localStorage.setItem(LS + '.studio', JSON.stringify({ tpl: ST.tpl, pal: ST.pal, font: ST.font, show: ST.show, brand: ST.brand, brand2: ST.brand2, colRev: !!ST.colRev })); } catch (e) {} };
 
   function computeFor(d) { var keep = S; S = Object.assign(JSON.parse(JSON.stringify(DEF)), d); try { return compute(); } finally { S = keep; } }
   var RT = { 'ق': 'القاهرة', 'مدينة': 'المدينة', 'جدة': 'جدة' };
@@ -2125,6 +2168,7 @@ td.k{color:var(--muted);font-size:12.5px}
     if (ST.trips.cur) out.push(tripCtx(S));
     store.forEach(function (r) { if (r.id !== cur && ST.trips[r.id]) out.push(tripCtx(r.data)); });
     if (!out.length) out.push(tripCtx(S));
+    if (ST.lvOrd && ST.lvOrd.length && out[0]) { var L0 = out[0].levels; out[0].levels = ST.lvOrd.filter(function (i) { return L0[i]; }).map(function (i) { return L0[i]; }).concat(L0.filter(function (l, i) { return ST.lvOrd.indexOf(i) < 0; })); }
     if (ST.noLbl) out.forEach(function (t) { t.levels.forEach(function (l) { l.label = ''; }); });
     return out;
   }
@@ -2133,7 +2177,10 @@ td.k{color:var(--muted);font-size:12.5px}
   var AMON = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
   function dlong(s) { var d = dParse(s); return d ? d.getDate() + ' ' + AMON[d.getMonth()] : (s || ''); }
   function txtList(s, t) { return String(s || '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean).map(function (x) { return x.replace('{route}', t ? t.routeL : '').replace('{air}', t ? t.air : ''); }); }
-  function cols() { return [['sgl', 'سنجل'], ['dbl', 'ثنائي'], ['tri', 'ثلاثي'], ['quad', QL()], ['kidb', 'طفل بسرير']].filter(function (c) { return ST.show[c[0]] && (c[0] !== 'kidb' || S.kbOn); }); }
+  function lowK() { var c = cols0(); return c[c.length - 1] || ['quad', QL()]; }
+  function othK() { var k = lowK()[0]; return cols().filter(function (x) { return x[0] !== k; }); }
+  function cols() { var c = cols0(); return ST.colRev ? c.slice().reverse() : c; }
+  function cols0() { return [['sgl', 'سنجل'], ['dbl', 'ثنائي'], ['tri', 'ثلاثي'], ['quad', QL()], ['kidb', 'طفل بسرير']].filter(function (c) { return ST.show[c[0]] && (c[0] !== 'kidb' || S.kbOn); }); }
   function star(sz, col, op) { var p = [], R = sz / 2, r = R * 0.72; for (var i = 0; i < 16; i++) { var a = Math.PI / 8 * i, rr = i % 2 ? r : R; p.push((R + rr * Math.cos(a)).toFixed(1) + ',' + (R + rr * Math.sin(a)).toFixed(1)); } return '<svg width="' + sz + '" height="' + sz + '" viewBox="0 0 ' + sz + ' ' + sz + '"><polygon points="' + p.join(' ') + '" fill="none" stroke="' + col + '" stroke-width="' + Math.max(2, sz / 60) + '" opacity="' + op + '"/><circle cx="' + R + '" cy="' + R + '" r="' + (R * 0.38) + '" fill="none" stroke="' + col + '" stroke-width="' + Math.max(2, sz / 80) + '" opacity="' + op + '"/></svg>'; }
   function orn(P, w) { return '<div class="orn" style="top:-120px;left:-120px">' + star(360, P.a2, .35) + '</div><div class="orn" style="bottom:-140px;right:-140px">' + star(420, P.a2, .28) + '</div>' + (w > 1100 ? '' : ''); }
   function bgPh() { return ST.bg ? '<div class="bgph" style="background-image:url(' + ST.bg + ')"></div>' : ''; }
@@ -2263,8 +2310,8 @@ td.k{color:var(--muted);font-size:12.5px}
   T.arch = function (trips) {
     var t = trips[0], c = cols();
     return '<div class="dz t-arch">' + orn(PALc()) + bgPh() + '<div class="ar"><div class="k">عمرة</div><div class="dt">' + esc(dlong(t.go) || t.name) + '</div><div class="ln">✈️ ' + esc(t.air) + ' · ' + esc(t.routeL) + '<br>🌙 ' + t.nights + ' ليلة: مكة ' + t.nMk + ' · المدينة ' + t.nMd + '</div>' +
-      '<div class="lv">' + t.levels.map(function (l) { var k = c[c.length - 1] || ['quad', QL()]; return '<div>' + esc(l.label) + ' <span>' + esc(l.mk) + '</span><b>' + fmt(l[k[0]]) + '</b></div>'; }).join('') + '</div>' +
-      '<div class="ln" style="font-size:20px">الأسعار للفرد ' + (c.length ? '(' + (c[c.length - 1] || [0, ''])[1] + ')' : '') + ' بالجنيه</div>' + brandRow() + '</div>' + footer() + '</div>';
+      '<div class="lv">' + t.levels.map(function (l) { var k = lowK() || ['quad', QL()]; return '<div>' + esc(l.label) + ' <span>' + esc(l.mk) + '</span><b>' + fmt(l[k[0]]) + '</b></div>'; }).join('') + '</div>' +
+      '<div class="ln" style="font-size:20px">الأسعار للفرد ' + (c.length ? '(' + (lowK() || [0, ''])[1] + ')' : '') + ' بالجنيه</div>' + brandRow() + '</div>' + footer() + '</div>';
   };
   T.split = function (trips) {
     var t = trips[0], c = cols();
@@ -2348,7 +2395,7 @@ td.k{color:var(--muted);font-size:12.5px}
   function lvName(l) { return l.label || l.mk; }
   function lvSub(l) { return (l.label ? '🕋 ' + esc(l.mk) + ' · ' : '') + '🕌 ' + esc(l.md); }
   function tInfo(t) { return '✈️ ' + esc(t.air) + ' · ' + esc(t.routeL) + ' · 🌙 ' + t.nights + ' ليلة (' + esc(t.segsTxt) + ')' + (t.umrahs >= 2 ? ' · 🕋🕋 عمرتين' : '') + (ST.hijri && t.hijri ? ' · ' + esc(t.hijri) : ''); }
-  function lowest(t) { var c = cols(), k = (c[c.length - 1] || ['quad'])[0]; return [k, (c[c.length - 1] || ['quad', QL()])[1]]; }
+  function lowest(t) { var c = cols(), k = (lowK() || ['quad'])[0]; return [k, (lowK() || ['quad', QL()])[1]]; }
   T.mini = function (trips) { var t = trips[0], c = cols();
     return '<div class="dz t-mini">' + brandRow() + '<div class="k z">UMRAH · ' + esc(t.go || '') + '</div><h2 class="z">' + esc(ST.title || t.name) + '</h2><div class="ln z"></div><div class="b z" style="font-size:24px">' + tInfo(t) + '</div>' +
       '<div class="z" style="--n:' + c.length + '"><div class="rw h"><b></b>' + c.map(function (k) { return '<span>' + k[1] + '</span>'; }).join('') + '</div>' +
@@ -2368,13 +2415,13 @@ td.k{color:var(--muted);font-size:12.5px}
       '<div class="pt z">' + t.levels.map(function (l) { return '<div class="r">' + esc(lvName(l)) + ' <span>' + esc(k[1]) + '</span><b>' + fmt(l[k[0]]) + '</b></div>'; }).join('') + '</div>' + footer() + '</div>'; };
   T.grid4 = function (trips) { var t = trips[0], c = cols(), k = lowest(t);
     return '<div class="dz t-grid4">' + orn(PALc()) + bgPh() + '<h2 class="z">' + esc(ST.title || t.name) + ' · ' + esc(dlong(t.go)) + '</h2><div class="g z">' +
-      t.levels.slice(0, 4).map(function (l) { return '<div class="c"><div><div class="n">' + esc(lvName(l)) + '</div><div class="h">' + lvSub(l) + '</div></div><div><div class="p">' + fmt(l[k[0]]) + '</div><div class="q">' + esc(k[1]) + (c.length > 1 ? ' · ' + c.slice(0, -1).map(function (x) { return x[1] + ' ' + fmt(l[x[0]]); }).join(' · ') : '') + '</div></div></div>'; }).join('') + '</div>' + footer() + '</div>'; };
+      t.levels.slice(0, 4).map(function (l) { return '<div class="c"><div><div class="n">' + esc(lvName(l)) + '</div><div class="h">' + lvSub(l) + '</div></div><div><div class="p">' + fmt(l[k[0]]) + '</div><div class="q">' + esc(k[1]) + (c.length > 1 ? ' · ' + othK().map(function (x) { return x[1] + ' ' + fmt(l[x[0]]); }).join(' · ') : '') + '</div></div></div>'; }).join('') + '</div>' + footer() + '</div>'; };
   T.banner = function (trips) { var t = trips[0], c = cols();
     return '<div class="dz t-banner">' + orn(PALc()) + bgPh() + '<div class="l z">' + brandBox(brandOf(ST.brand)) + '<div class="k">عمرة</div><div class="d">' + esc(dlong(t.go) || t.name) + '</div><div class="i">' + tInfo(t) + '</div></div>' +
       '<div class="r z" style="--n:' + c.length + '">' + t.levels.map(function (l) { return '<div class="lv"><b>' + esc(lvName(l)) + '<small>' + lvSub(l) + '</small></b>' + c.map(function (k) { return '<span>' + fmt(l[k[0]]) + '<i>' + k[1] + '</i></span>'; }).join('') + '</div>'; }).join('') + footer() + '</div></div>'; };
   T.tag = function (trips) { var t = trips[0], c = cols(), k = lowest(t);
     return '<div class="dz t-tag">' + orn(PALc()) + bgPh() + brandRow() + '<h2 class="z">' + esc(ST.title || t.name) + '</h2><div class="b z" style="text-align:center;font-size:24px">' + tInfo(t) + '</div><div class="tags z">' +
-      t.levels.map(function (l) { return '<div class="tg"><div><b>' + esc(lvName(l)) + '</b><small>' + lvSub(l) + '</small></div><div class="pp"><strong>' + fmt(l[k[0]]) + '</strong><span>' + esc(k[1]) + (c.length > 1 ? ' · ' + c.slice(0, -1).map(function (x) { return x[1] + ' ' + fmt(l[x[0]]); }).join(' · ') : '') + '</span></div></div>'; }).join('') + '</div>' + incReq(t) + footer() + '</div>'; };
+      t.levels.map(function (l) { return '<div class="tg"><div><b>' + esc(lvName(l)) + '</b><small>' + lvSub(l) + '</small></div><div class="pp"><strong>' + fmt(l[k[0]]) + '</strong><span>' + esc(k[1]) + (c.length > 1 ? ' · ' + othK().map(function (x) { return x[1] + ' ' + fmt(l[x[0]]); }).join(' · ') : '') + '</span></div></div>'; }).join('') + '</div>' + incReq(t) + footer() + '</div>'; };
   T.cal = function (trips) { var t = trips[0], d = dParse(t.go), k = lowest(t);
     return '<div class="dz t-cal">' + orn(PALc()) + bgPh() + brandRow() + '<div class="cal z"><div class="m">' + (d ? AMON[d.getMonth()] : '') + '</div><div class="dd">' + (d ? d.getDate() : '—') + '</div><div class="y">' + (d ? d.getFullYear() : '') + (ST.hijri && t.hijri ? ' · ' + esc(t.hijri) : '') + '</div></div>' +
       '<h2 class="z">' + esc(ST.title || 'عمرة') + '</h2><div class="b z" style="font-size:24px;text-align:center">' + tInfo(t) + '</div><div class="ls z">' + t.levels.map(function (l) { return '<div>' + esc(lvName(l)) + ' <span>' + lvSub(l) + '</span><b>' + fmt(l[k[0]]) + '</b></div>'; }).join('') + '</div>' +
@@ -2413,7 +2460,7 @@ td.k{color:var(--muted);font-size:12.5px}
   function mdLines(s) { return String(s || '').split(/\s*[\/،,]\s*/).filter(Boolean); }
   function ehBrand() { return brandOf('eht') || brandOf(ST.brand2) || brandOf(ST.brand); }
   function phList(b) { return String((b && b.phones) || '').split(/\s*\/\s*/).filter(Boolean).map(function (x) { var m = /^(.*?)[:：]\s*([\d\s+]+)$/.exec(x); return m ? { n: m[1].trim(), p: m[2].trim() } : { n: '', p: x.trim() }; }); }
-  function lowAll(trips) { var c = cols(), k = (c[c.length - 1] || ['quad'])[0], m = 0; trips.forEach(function (t) { t.levels.forEach(function (l) { var v = num(l[k]); if (v && (!m || v < m)) m = v; }); }); return m; }
+  function lowAll(trips) { var c = cols(), k = (lowK() || ['quad'])[0], m = 0; trips.forEach(function (t) { t.levels.forEach(function (l) { var v = num(l[k]); if (v && (!m || v < m)) m = v; }); }); return m; }
   function flower(cls) { var p = ''; for (var i = 0; i < 8; i++) p += '<ellipse cx="100" cy="48" rx="20" ry="44" transform="rotate(' + (i * 45) + ' 100 100)" fill="none" stroke="#111" stroke-width="9"/>'; return '<svg class="flw ' + cls + '" width="200" height="200" viewBox="0 0 200 200">' + p + '<circle cx="100" cy="100" r="16" fill="#111"/></svg>'; }
   function coLogo(b) { if (!b) return '<div></div>'; return '<div class="clg">' + (b.logo ? '<img src="' + b.logo + '" alt="">' : '') + '<b>' + esc(b.name) + '</b><small>' + esc(b.lic || '') + '</small></div>'; }
   function coList(t) {
@@ -2440,7 +2487,7 @@ td.k{color:var(--muted);font-size:12.5px}
       }).join('') + coList(t0) + coFoot() + '</div>'; };
 
   // ٢) منف — فنادق وأسعار
-  T.co_mgrid = function (trips) { var c = cols(), k = c[c.length - 1] || ['quad', QL()], t0 = trips[0];
+  T.co_mgrid = function (trips) { var c = cols(), k = lowK() || ['quad', QL()], t0 = trips[0];
     return '<div class="dz t-co_mgrid">' + flower('f1') + flower('f2') + bgPh() +
       '<div class="hd z">' + coLogo(brandOf(ST.brand2)) + '<div class="tt"><h2>' + esc(ST.title || 'برامج عمرة') + '</h2><h3>' + esc(ST.sub || yrs(t0)) + '</h3></div>' + coLogo(brandOf(ST.brand)) + '</div>' +
       trips.map(function (t) { var mds = [];
@@ -2455,7 +2502,7 @@ td.k{color:var(--muted);font-size:12.5px}
     return '<div class="lg z">' + (b && b.logo ? '<img src="' + b.logo + '" alt="">' : '') + '<b>' + esc(b ? b.name : '') + '</b></div>' +
       '<div class="tl z"><div class="um">عُمرة</div><div class="pl"><b>' + sub + '</b><span>📅 ' + under + '</span></div></div>'; }
   function ehContacts() { var b = ehBrand(); if (!b) return ''; return '<div class="ct z">' + phList(b).map(function (x) { return '<span>📞 ' + esc(x.p) + '</span>'; }).join('') + (b.addr ? '<span class="a">📍 ' + esc(b.addr) + '</span>' : '') + '</div>'; }
-  T.co_ehsq = function (trips) { var t = trips[0], l = focusLvl(t), c = cols(), k = (c[c.length - 1] || ['quad'])[0];
+  T.co_ehsq = function (trips) { var t = trips[0], l = focusLvl(t), c = cols(), k = (lowK() || ['quad'])[0];
     var card = function (ic, name, n, dist, ph) { return '<div class="hc"><div class="hb"><b>' + ic + ' ' + mdLines(name).map(esc).join('<br>') + '</b><small>' + nW(n) + '</small></div><div class="im"' + (ph ? ' style="background-image:url(' + ph + ')"' : '') + '>' + (ph ? '' : '🏨') + '</div><div class="ds">' + esc(dist || '') + '</div></div>'; };
     return '<div class="dz t-co_ehsq">' + (ST.bg ? bgPh() : '') + '<div class="pp" style="background-image:url(' + COIMG.p_couple + ')"></div>' + ehHead(esc(l.label ? (/^ال/.test(l.label) && l.label.indexOf('(') < 0 ? 'برنامج ' + l.label.replace(/^ال/, '') : l.label) : 'برنامج عمرة'), t.days + ' يوم - ' + nW(t.nights)) +
       '<div class="hs z">' + card('🕋', l.mk, t.nMk, l.mkDist, hPhoto(l.mk)) + card('🕌', l.md, t.nMd, l.mdDist, hPhoto(l.md)) + '</div>' +
@@ -2493,7 +2540,7 @@ td.k{color:var(--muted);font-size:12.5px}
       '<div class="ft z"><b>مزارات المدينة ومكة</b><span>أحدث الأتوبيسات داخلياً وخارجياً · طيران ' + esc(t.air) + '</span></div>' + (b ? psContacts(b) : '') + '</div>'; };
 
   // ٧) بورسعيد — يبدأ من
-  T.co_ps2 = function (trips) { var t = trips[0], l = focusLvl(t), c = cols(), k = (c[c.length - 1] || ['quad'])[0], b = brandOf(ST.brand);
+  T.co_ps2 = function (trips) { var t = trips[0], l = focusLvl(t), c = cols(), k = (lowK() || ['quad'])[0], b = brandOf(ST.brand);
     var hc = function (n, city, name) { var ph = hPhoto(name); return '<div class="hc"><div class="im"' + (ph ? ' style="background-image:url(' + ph + ')"' : '') + '>' + (ph ? '' : '🏨') + '</div><div><b>' + nW(n) + '</b><span>' + city + '</span><strong>' + mdLines(name).map(esc).join('<br>') + '</strong></div></div>'; };
     return '<div class="dz t-co_ps2">' + bgPh() + '<div class="psrb z">' + esc(b ? b.name : '') + '<small>رفيقك للبيت العتيق</small></div>' +
       '<div class="ofr z"><b>' + esc(ST.sub || 'عروضنا مستمرة') + '</b><span>ومكملين معاكم</span></div>' +
@@ -2511,7 +2558,7 @@ td.k{color:var(--muted);font-size:12.5px}
     ['x_wide', '🎬 بانوراما عريضة', '1920×1080 للشاشات والفيسبوك'], ['x_cards3', '🃏 بطاقات مائلة', 'بطاقة لكل مستوى بزاوية']);
   function xPh() { return ST.bg || COIMG.p_pano; }
   function xKa() { return ST.bg || COIMG.p_kaaba; }
-  function xLow(l) { var c = cols(), k = c[c.length - 1] || ['quad', QL()]; return [fmt(l[k[0]]), k[1]]; }
+  function xLow(l) { var c = cols(), k = lowK() || ['quad', QL()]; return [fmt(l[k[0]]), k[1]]; }
   function xBrand(cls) { var b = brandOf(ST.brand), b2 = ST.brand2 ? brandOf(ST.brand2) : null;
     var one = function (x) { return x ? '<span class="k-bi">' + (x.logo ? '<img src="' + x.logo + '" alt="">' : '') + '<b>' + esc(x.name) + '</b></span>' : ''; };
     return '<div class="k-br ' + (cls || '') + ' z">' + one(b2) + one(b) + '</div>'; }
@@ -2536,7 +2583,7 @@ td.k{color:var(--muted);font-size:12.5px}
   T.x_arch = function (trips) { var t = trips[0], c = cols();
     return '<div class="dz t-x_arch">' + orn(PALc()) + xBrand() + '<div class="k-arch z"><img alt="" src="' + xKa() + '" style="position:absolute;left:0;top:50%;width:100%;transform:translateY(-50%)"></div>' +
       '<div class="k-tt z"><h2>' + xTitle(t) + '</h2><div class="k-inf">' + xInfo(t) + '</div></div>' +
-      '<div class="k-cards z" style="--n:' + Math.min(4, t.levels.length) + '">' + t.levels.slice(0, 4).map(function (l) { var lo = xLow(l); return '<div class="k-c"><b>' + esc(lvName(l)) + '</b><small>🕋 ' + esc(l.mk) + (l.mkDist && ST.showDist ? '<br><i>' + esc(l.mkDist) + '</i>' : '') + '</small><small>🕌 ' + esc(l.md) + '</small><div class="k-big">' + lo[0] + '<em>' + esc(lo[1]) + '</em></div><div class="k-sm">' + c.slice(0, -1).map(function (k) { return k[1] + ' ' + fmt(l[k[0]]); }).join(' · ') + '</div></div>'; }).join('') + '</div>' + xFoot() + '</div>'; };
+      '<div class="k-cards z" style="--n:' + Math.min(4, t.levels.length) + '">' + t.levels.slice(0, 4).map(function (l) { var lo = xLow(l); return '<div class="k-c"><b>' + esc(lvName(l)) + '</b><small>🕋 ' + esc(l.mk) + (l.mkDist && ST.showDist ? '<br><i>' + esc(l.mkDist) + '</i>' : '') + '</small><small>🕌 ' + esc(l.md) + '</small><div class="k-big">' + lo[0] + '<em>' + esc(lo[1]) + '</em></div><div class="k-sm">' + othK().map(function (k) { return k[1] + ' ' + fmt(l[k[0]]); }).join(' · ') + '</div></div>'; }).join('') + '</div>' + xFoot() + '</div>'; };
 
   T.x_glass = function (trips) { var t = trips[0], c = cols();
     return '<div class="dz t-x_glass"><div class="k-bg" style="background-image:url(' + COIMG.p_kaaba + ')"></div><div class="k-ov"></div>' + (ST.bg ? '<div class="k-bg" style="background-image:url(' + ST.bg + ')"></div><div class="k-ov"></div>' : '') + xBrand('k-wh') +
@@ -2579,7 +2626,7 @@ td.k{color:var(--muted);font-size:12.5px}
     return '<div class="dz t-x_compare">' + orn(PALc()) + xBrand() + '<div class="k-tt z"><h2>' + xTitle(t) + ' · اختر باقتك</h2><div class="k-inf">' + xInfo(t) + '</div></div>' +
       '<div class="k-cols z" style="--n:' + L.length + '">' + L.map(function (l) { var lo = xLow(l), hot = l === mid;
         return '<div class="k-col' + (hot ? ' k-hot' : '') + '">' + (hot ? '<div class="k-bd">⭐ الأكثر طلباً</div>' : '') + '<b class="k-nm">' + esc(lvName(l)) + '</b><div class="k-big">' + lo[0] + '</div><small>جنيه · ' + esc(lo[1]) + '</small>' +
-          '<ul><li>🕋 ' + esc(l.mk) + (l.mkDist && ST.showDist ? ' <i>(' + esc(l.mkDist) + ')</i>' : '') + '</li><li>🕌 ' + esc(l.md) + '</li><li>🌙 ' + t.nMk + ' مكة + ' + t.nMd + ' المدينة</li>' + c.slice(0, -1).map(function (k) { return '<li>' + k[1] + ': <b>' + fmt(l[k[0]]) + '</b></li>'; }).join('') + '</ul></div>'; }).join('') + '</div>' + incReq(t) + xFoot() + '</div>'; };
+          '<ul><li>🕋 ' + esc(l.mk) + (l.mkDist && ST.showDist ? ' <i>(' + esc(l.mkDist) + ')</i>' : '') + '</li><li>🕌 ' + esc(l.md) + '</li><li>🌙 ' + t.nMk + ' مكة + ' + t.nMd + ' المدينة</li>' + othK().map(function (k) { return '<li>' + k[1] + ': <b>' + fmt(l[k[0]]) + '</b></li>'; }).join('') + '</ul></div>'; }).join('') + '</div>' + incReq(t) + xFoot() + '</div>'; };
 
   T.x_night = function (trips) { var t = trips[0], c = cols();
     return '<div class="dz t-x_night">' + xSky(140, 1080, 1100) + xMoon() + xMosque('#081127', 1080, 300) + xBrand('k-wh') +
@@ -2592,7 +2639,7 @@ td.k{color:var(--muted);font-size:12.5px}
       '<div class="k-lines z">' + t.levels.map(function (l) { var lo = xLow(l); return '<div class="k-ln"><small>' + esc(lvName(l)) + '</small><b>' + esc(l.mk) + '</b><span>' + lo[0] + ' جنيه</span></div>'; }).join('') + '</div>' +
       '<div class="k-head z"><b>رحلة ' + esc(dlong(t.go)) + '</b><span>' + t.nights + ' ليلة · ' + esc(t.air) + ' · ' + esc(t.segsTxt) + '</span></div>' + xBrand('k-wh k-bot') + xFoot('k-wh') + '</div>'; };
 
-  T.x_tagph = function (trips) { var t = trips[0], lo = [fmt(lowAll(trips)), (cols().slice(-1)[0] || ['', QL()])[1]];
+  T.x_tagph = function (trips) { var t = trips[0], lo = [fmt(lowAll(trips)), (lowK() || ['', QL()])[1]];
     return '<div class="dz t-x_tagph"><div class="k-bg" style="background-image:url(' + xPh() + ')"></div><div class="k-ov"></div>' + xBrand('k-wh') +
       '<div class="k-tag z"><em></em><small>يبدأ من</small><b>' + lo[0] + '</b><small>جنيه · ' + esc(lo[1]) + '</small></div>' +
       '<div class="k-tt z"><h2>' + xTitle(t) + ' ' + esc(dlong(t.go)) + '</h2><div class="k-inf">' + xInfo(t) + '</div></div>' + xFoot('k-wh') + '</div>'; };
@@ -2635,7 +2682,7 @@ td.k{color:var(--muted);font-size:12.5px}
   T.y_polaroid = function (trips) { var t = trips[0], P = PALc();
     var pol = function (name, n, lab, i) { var p = hPhoto(name); return '<div class="k-pol k-r' + (i % 3) + '">' + yPin(P.hot) + '<div class="k-im"' + (p ? ' style="background-image:url(' + p + ')"' : '') + '>' + (p ? '' : '🏨') + '</div><b>' + esc(name) + '</b><small>' + lab + ' · ' + n + ' ليالي</small></div>'; };
     return '<div class="dz t-y_polaroid">' + xStars('yp1', P.a2, .18) + xBrand() + '<div class="k-tt z"><h2>' + xTitle(t) + ' · ' + esc(dlong(t.go)) + '</h2><div class="k-inf">' + xInfo(t) + '</div></div>' +
-      t.levels.map(function (l, i) { var lo = xLow(l); return '<div class="k-row z"><div class="k-note"><b>' + esc(lvName(l)) + '</b><strong>' + lo[0] + '</strong><small>جنيه · ' + esc(lo[1]) + '</small><em>' + cols().slice(0, -1).map(function (k) { return k[1] + ' ' + fmt(l[k[0]]); }).join(' · ') + '</em></div>' + pol(l.mk, t.nMk, '🕋 مكة', i) + pol(l.md, t.nMd, '🕌 المدينة', i + 1) + '</div>'; }).join('') + xFoot() + '</div>'; };
+      t.levels.map(function (l, i) { var lo = xLow(l); return '<div class="k-row z"><div class="k-note"><b>' + esc(lvName(l)) + '</b><strong>' + lo[0] + '</strong><small>جنيه · ' + esc(lo[1]) + '</small><em>' + othK().map(function (k) { return k[1] + ' ' + fmt(l[k[0]]); }).join(' · ') + '</em></div>' + pol(l.mk, t.nMk, '🕋 مكة', i) + pol(l.md, t.nMd, '🕌 المدينة', i + 1) + '</div>'; }).join('') + xFoot() + '</div>'; };
 
   T.y_neon = function (trips) { var t = trips[0], c = cols();
     return '<div class="dz t-y_neon">' + xStars('yn1', '#7c3aed', .35) + xBrand('k-wh') + '<div class="k-tt z"><h2>' + xTitle(t) + '</h2><div class="k-sub">' + esc(dlong(t.go) || t.name) + ' · ' + t.nights + ' ليلة · ' + esc(t.air) + '</div></div>' +
@@ -2644,7 +2691,7 @@ td.k{color:var(--muted);font-size:12.5px}
 
   T.y_wave = function (trips) { var t = trips[0], c = cols(), P = PALc();
     return '<div class="dz t-y_wave"><div class="k-head" style="background-image:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.3)),url(' + xPh() + ')">' + xBrand('k-wh') + '<h2 class="z">' + xTitle(t) + ' ' + esc(dlong(t.go)) + '</h2><div class="k-inf z k-wh">' + xInfo(t) + '</div></div>' + yWave(P.bg) +
-      '<div class="k-cards z">' + t.levels.map(function (l) { var lo = xLow(l); return '<div class="k-c"><div><b>' + esc(lvName(l)) + '</b><small>🕋 ' + esc(l.mk) + '<br>🕌 ' + esc(l.md) + '</small></div><div class="k-pr"><strong>' + lo[0] + '</strong><small>' + esc(lo[1]) + '</small><em>' + c.slice(0, -1).map(function (k) { return k[1] + ' ' + fmt(l[k[0]]); }).join(' · ') + '</em></div></div>'; }).join('') + '</div>' + yList(t) + xFoot() + '</div>'; };
+      '<div class="k-cards z">' + t.levels.map(function (l) { var lo = xLow(l); return '<div class="k-c"><div><b>' + esc(lvName(l)) + '</b><small>🕋 ' + esc(l.mk) + '<br>🕌 ' + esc(l.md) + '</small></div><div class="k-pr"><strong>' + lo[0] + '</strong><small>' + esc(lo[1]) + '</small><em>' + othK().map(function (k) { return k[1] + ' ' + fmt(l[k[0]]); }).join(' · ') + '</em></div></div>'; }).join('') + '</div>' + yList(t) + xFoot() + '</div>'; };
 
   T.y_brochure = function (trips) { var t = trips[0], c = cols(), b = brandOf(ST.brand);
     return '<div class="dz t-y_brochure"><div class="k-pn k-p1"><div class="k-cv" style="background-image:url(' + xKa() + ')"></div><div class="k-cvov"></div>' + xBrand('k-wh') + '<div class="k-cvt z"><h2>' + xTitle(t) + '</h2><span>' + esc(dlong(t.go)) + ' · ' + t.nights + ' ليلة</span><em>يبدأ من ' + fmt(lowAll(trips)) + ' ج</em></div></div>' +
@@ -2682,7 +2729,7 @@ td.k{color:var(--muted);font-size:12.5px}
 
   T.y_diamond = function (trips) { var t = trips[0], c = cols();
     return '<div class="dz t-y_diamond">' + orn(PALc()) + xBrand() + '<div class="k-tt z"><h2>' + xTitle(t) + '</h2><div class="k-inf">' + xInfo(t) + '</div></div>' +
-      '<div class="k-dl z">' + t.levels.map(function (l) { var lo = xLow(l); return '<div class="k-d"><div class="k-dia"><div><strong>' + lo[0] + '</strong><small>' + esc(lo[1]) + '</small></div></div><b>' + esc(lvName(l)) + '</b><small>🕋 ' + esc(l.mk) + '<br>🕌 ' + esc(l.md) + '</small><em>' + c.slice(0, -1).map(function (k) { return k[1] + ' ' + fmt(l[k[0]]); }).join(' · ') + '</em></div>'; }).join('') + '</div>' + yList(t) + xFoot() + '</div>'; };
+      '<div class="k-dl z">' + t.levels.map(function (l) { var lo = xLow(l); return '<div class="k-d"><div class="k-dia"><div><strong>' + lo[0] + '</strong><small>' + esc(lo[1]) + '</small></div></div><b>' + esc(lvName(l)) + '</b><small>🕋 ' + esc(l.mk) + '<br>🕌 ' + esc(l.md) + '</small><em>' + othK().map(function (k) { return k[1] + ' ' + fmt(l[k[0]]); }).join(' · ') + '</em></div>'; }).join('') + '</div>' + yList(t) + xFoot() + '</div>'; };
 
   T.y_receipt = function (trips) { var t = trips[0], c = cols(), b = brandOf(ST.brand), ln = function (a, v) { return '<div class="k-ln"><span>' + a + '</span><i></i><b>' + v + '</b></div>'; };
     return '<div class="dz t-y_receipt"><div class="k-paper z"><div class="k-hd"><b>' + esc(b ? b.name : '') + '</b><small>' + esc(b ? b.lic : '') + '</small><small>' + esc(t.go || '') + '</small></div><div class="k-dash"></div>' +
@@ -2709,20 +2756,21 @@ td.k{color:var(--muted);font-size:12.5px}
   /* واجهة الاستوديو */
   function rec() { return cur ? store.filter(function (x) { return x.id === cur; })[0] : null; }
   function openStudio() {
-    var r = rec(); if (r && r.studio) { ['title', 'sub', 'inc', 'req', 'showInc', 'showReq', 'showDist', 'focus', 'offer', 'noLbl'].forEach(function (k) { if (r.studio[k] !== undefined) ST[k] = JSON.parse(JSON.stringify(r.studio[k])); }); }
+    ST.upatch = null; ST.lvOrd = null; var r = rec(); if (r && r.studio) { ['title', 'sub', 'inc', 'req', 'showInc', 'showReq', 'showDist', 'focus', 'offer', 'noLbl', 'colRev', 'lvOrd'].forEach(function (k) { if (r.studio[k] !== undefined) ST[k] = JSON.parse(JSON.stringify(r.studio[k])); }); }
     else if (!ST.title) ST.title = 'برامج عمرة';
     ST.custom = (r && r.studio && r.studio.custom) ? JSON.parse(JSON.stringify(r.studio.custom)) : {}; $('edSaveHint').textContent = ''; $('exOut').hidden = true;
     $('ov3').hidden = false; renderStudio(); sdraw();
   }
   function renderStudio() {
     var h = '';
-    h += '<div class="grp"><b>القالب</b><div class="tgrid">' + DTPL.map(function (t) { return '<button type="button" data-tpl="' + t[0] + '" class="' + (ST.tpl === t[0] ? 'on' : '') + '" title="' + esc(t[2]) + '">' + t[1] + '</button>'; }).join('') + '</div></div>';
+    h += tplGroupHtml();
     h += '<div class="grp"><b>الألوان</b><div class="sw">' + Object.keys(PAL).map(function (k) { var P = PAL[k]; return '<button type="button" data-pal="' + k + '" class="' + (ST.pal === k ? 'on' : '') + '" title="' + P.n + '" style="background:linear-gradient(135deg,' + P.a + ' 50%,' + P.a2 + ' 50%)"></button>'; }).join('') + '</div>' +
       '<b>الخط</b><select id="stFont">' + FONTS.map(function (f) { return '<option value="' + f[0] + '"' + (f[0] === ST.font ? ' selected' : '') + '>' + f[1] + '</option>'; }).join('') + '</select></div>';
     h += '<div class="grp"><b>الرحلات في التصميم (دمج)</b><label class="chk"><input type="checkbox" data-tr="cur"' + (ST.trips.cur ? ' checked' : '') + '> ' + esc(S.trip ? S.trip.name : (S.name || 'التكلفة الحالية')) + ' (الحالية)</label>' +
       store.filter(function (r) { return r.id !== cur; }).map(function (r) { return '<label class="chk"><input type="checkbox" data-tr="' + r.id + '"' + (ST.trips[r.id] ? ' checked' : '') + '> ' + esc(r.data.trip ? r.data.trip.name : r.data.name) + (r.data.role === 'draft' ? ' (مسودة)' : '') + '</label>'; }).join('') +
       (store.length ? '' : '<span class="hint">احفظ تكاليف أخرى لتظهر هنا للدمج.</span>') + '</div>';
     h += '<div class="grp"><b>الأسعار الظاهرة (بالترتيب)</b><div class="actions">' + [['sgl', 'سنجل'], ['dbl', 'ثنائي'], ['tri', 'ثلاثي'], ['quad', QL()], ['kidb', 'طفل بسرير'], ['kid', 'طفل'], ['inf', 'رضيع'], ['hijri', 'التاريخ الهجري']].map(function (c) { return '<label class="chk"><input type="checkbox" data-sh="' + c[0] + '"' + ((c[0] === 'hijri' ? ST.hijri : ST.show[c[0]]) ? ' checked' : '') + '> ' + c[1] + '</label>'; }).join('') + '</div>' +
+      '<label class="chk"><input type="checkbox" id="stColRev"' + (ST.colRev ? ' checked' : '') + '> ↔ عكس ترتيب الأسعار (' + QL() + ' أولاً)</label>' + lvOrdHtml('so', ST.lvOrd) +
       '<b>المستوى المعروض (للبوستر/المربع/الستوري)</b><select id="stFocus"><option value="-1">الأرخص تلقائياً</option>' + S.levels.map(function (l, i) { return '<option value="' + i + '"' + (ST.focus === i ? ' selected' : '') + '>' + esc((l.label || LBL0[i] || ('مستوى ' + (i + 1)))) + '</option>'; }).join('') + '</select></div>';
     h += '<div class="grp"><b>الشركة (لوجو وبيانات)</b><div class="row"><div class="f"><label for="stBrand">الأساسية</label><select id="stBrand">' + BR.map(function (b) { return '<option value="' + b.id + '"' + (b.id === ST.brand ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') + '</select></div>' +
       '<div class="f"><label for="stBrand2">شركة ثانية (اختياري)</label><select id="stBrand2"><option value="">—</option>' + BR.map(function (b) { return '<option value="' + b.id + '"' + (b.id === ST.brand2 ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') + '</select></div></div>' +
@@ -2738,14 +2786,19 @@ td.k{color:var(--muted);font-size:12.5px}
     if (/^offer/.test(ST.tpl)) h += '<div class="grp"><b>عرض الأسعار للشركات</b><div class="f"><label for="oRef">رقم العرض</label><input id="oRef" value="' + esc(ST.offer.ref || '') + '" placeholder="تلقائي"></div><div class="f"><label for="oTo">الجهة</label><input id="oTo" value="' + esc(ST.offer.to) + '"></div><div class="f"><label for="oSj">الموضوع</label><input id="oSj" value="' + esc(ST.offer.subject) + '"></div>' +
       '<div class="f"><label for="oPre">الديباجة</label><textarea id="oPre">' + esc(ST.offer.pre) + '</textarea></div><div class="f"><label for="oVal">مدة السريان والشروط</label><textarea id="oVal" style="min-height:50px">' + esc(ST.offer.val) + '</textarea></div><div class="f"><label for="oSign">التوقيع</label><textarea id="oSign" style="min-height:50px">' + esc(ST.offer.sign) + '</textarea></div><div class="f"><label for="oTerms">الشروط والأحكام (سطر لكل بند)</label><textarea id="oTerms">' + esc(ST.offer.terms || '') + '</textarea></div></div>';
     h += '<div class="actions"><button class="pri sm" id="stSave">💾 حفظ إعدادات العرض مع التكلفة</button></div>';
+    h += '<div class="grp"><b>📁 حفظ التصميم الحالي كقالب</b><div class="hint">يحفظ القالب والألوان والخط والنصوص وكل التعديلات اليدوية (التحريك/الحجم/الألوان/المحذوف/العناصر المضافة) — ويُطبَّق على أي تكلفة بأرقامها.</div>' +
+      '<div class="actions"><input id="ctName" placeholder="اسم القالب (مثال: بوستر رجب ذهبي)" style="flex:1;min-width:160px"><button class="sm pri" id="ctSave">📁 حفظ كقالب</button></div><div class="actions"><button class="sm" id="ctShow">👁 إظهار العناصر اللي اتحذفت من التصميم</button></div></div>';
     $('stOpts').innerHTML = h;
     var O = $('stOpts'), on = function (sel, ev, fn) { O.querySelectorAll(sel).forEach(function (x) { x.addEventListener(ev, function (e) { fn(x, e); }); }); };
-    on('[data-tpl]', 'click', function (x) { ST.tpl = x.dataset.tpl; saveSTg(); renderStudio(); sdraw(); });
+    on('[data-tpl]', 'click', function (x, e) { if (e.target.closest('[data-fv]')) return; ST.tpl = x.dataset.tpl; ST.upatch = null; saveSTg(); renderStudio(); sdraw(); });
+    wireTplGroup(O, on);
     on('[data-pal]', 'click', function (x) { ST.pal = x.dataset.pal; saveSTg(); renderStudio(); sdraw(); });
     on('#stFont', 'change', function (x) { ST.font = x.value; saveSTg(); sdraw(); });
     on('[data-tr]', 'change', function (x) { ST.trips[x.dataset.tr] = x.checked; sdraw(); });
     on('[data-sh]', 'change', function (x) { if (x.dataset.sh === 'hijri') ST.hijri = x.checked; else ST.show[x.dataset.sh] = x.checked; saveSTg(); sdraw(); });
     on('#stFocus', 'change', function (x) { ST.focus = +x.value; sdraw(); });
+    on('#stColRev', 'change', function (x) { ST.colRev = x.checked; saveSTg(); delete ST.custom[ST.tpl]; sdraw(); });
+    on('[data-so]', 'click', function (x) { ST.lvOrd = moveOrd(ST.lvOrd, +x.dataset.i, +x.dataset.so); delete ST.custom[ST.tpl]; renderStudio(); sdraw(); });
     on('#stBrand', 'change', function (x) { ST.brand = x.value; saveSTg(); renderStudio(); sdraw(); });
     on('#stBrand2', 'change', function (x) { ST.brand2 = x.value; saveSTg(); sdraw(); });
     [['bName', 'name'], ['bLic', 'lic'], ['bPh', 'phones'], ['bAd', 'addr']].forEach(function (p) { on('#' + p[0], 'change', function (x) { var b = brandOf(ST.brand); if (b) { b[p[1]] = x.value; saveBR(); renderStudio(); sdraw(); } }); });
@@ -2766,7 +2819,7 @@ td.k{color:var(--muted);font-size:12.5px}
     [['oTo', 'to'], ['oSj', 'subject'], ['oPre', 'pre'], ['oVal', 'val'], ['oSign', 'sign'], ['oRef', 'ref'], ['oTerms', 'terms']].forEach(function (p) { on('#' + p[0], 'change', function (x) { ST.offer[p[1]] = x.value; sdraw(); }); });
     on('#stSave', 'click', function () {
       var r = rec(); if (!r) { toast('احفظ التكلفة أولاً'); return; }
-      r.studio = { custom: (r.studio && r.studio.custom) || {}, noLbl: !!ST.noLbl, title: ST.title, sub: ST.sub, inc: ST.inc, req: ST.req, showInc: ST.showInc, showReq: ST.showReq, showDist: ST.showDist, focus: ST.focus, offer: JSON.parse(JSON.stringify(ST.offer)), tpl: ST.tpl };
+      r.studio = { custom: (r.studio && r.studio.custom) || {}, colRev: !!ST.colRev, lvOrd: ST.lvOrd || null, noLbl: !!ST.noLbl, title: ST.title, sub: ST.sub, inc: ST.inc, req: ST.req, showInc: ST.showInc, showReq: ST.showReq, showDist: ST.showDist, focus: ST.focus, offer: JSON.parse(JSON.stringify(ST.offer)), tpl: ST.tpl };
       rpc('tc_studio', { p_id: r.id, p_studio: r.studio, p_log: 'حفظ إعدادات عرض الأسعار (' + (/^offer/.test(ST.tpl) ? 'الجهة: ' + ST.offer.to : ST.tpl) + ')' }).then(function () { loadLog(r.id); toast('✅ حُفظت إعدادات العرض (لا تغيّر أرقام التكلفة)'); }, function (e) { toast('❌ ' + errT(e)); });
     });
   }
@@ -2808,8 +2861,9 @@ td.k{color:var(--muted);font-size:12.5px}
   function applyVars() { var w = liveWrap(); if (!w) return; var tmp = document.createElement('div'); tmp.innerHTML = wrapVars(''); w.setAttribute('style', tmp.firstChild.getAttribute('style')); fitLive(); }
   function buildLive(force) {
     var trips = tripsSel(); if (['poster', 'square', 'story'].indexOf(ST.tpl) >= 0) trips = trips.slice(0, 1);
-    var html = (!force && ST.custom[ST.tpl]) ? ST.custom[ST.tpl] : T[ST.tpl](trips);
+    var fresh = force || !ST.custom[ST.tpl], html = fresh ? T[ST.tpl](trips) : ST.custom[ST.tpl];
     $('stLive').innerHTML = wrapVars(html);
+    if (fresh) { tagLive(); if (ST.upatch && ST.upatch.base === ST.tpl) applyPatch(ST.upatch.patch); }
     if (ED.on) enableEdit(); fitLive();
   }
   // يُستدعى من الاستوديو بدل الرسم كصورة
@@ -2825,26 +2879,48 @@ td.k{color:var(--muted);font-size:12.5px}
     root.querySelectorAll('.free').forEach(function (f) { addHandle(f, true); f.querySelector('.ft').setAttribute('contenteditable', 'true'); });
   }
   function disableEdit() { var root = liveRoot(); if (!root) return; root.classList.remove('editing'); root.querySelectorAll('.eh').forEach(function (x) { x.remove(); }); root.querySelectorAll('[contenteditable]').forEach(function (x) { x.removeAttribute('contenteditable'); }); }
-  function addHandle(el, free) {
+  function addHandle(el, free) {   // (دفعة 7) كل عنصر — حتى المثبّت في مكانه — يتحرك بحرية ويتكبّر/يصغر ويتخفى ويرجع
     var h = document.createElement('div'); h.className = 'eh'; h.contentEditable = 'false';
-    h.innerHTML = '<span data-a="drag" title="اسحب للتحريك">' + (free ? '✥' : '↕') + '</span><span data-a="up" title="لأعلى">▲</span><span data-a="dn" title="لأسفل">▼</span><span data-a="dup" title="تكرار">⧉</span><span data-a="big" title="تكبير الخط">A+</span><span data-a="sml" title="تصغير الخط">A−</span><span data-a="del" title="حذف">✕</span>';
-    el.style.position = el.style.position || (free ? 'absolute' : 'relative');
+    var cs = getComputedStyle(el), abs = free || cs.position === 'absolute';
+    h.innerHTML = (abs ? '' : '<span data-a="drag" title="اسحب لتغيير الترتيب">↕</span>') + '<span data-a="move" title="اسحب للتحريك الحر لأي مكان">✥</span>' +
+      '<span data-a="up" title="لأعلى / للخلف">▲</span><span data-a="dn" title="لأسفل / للأمام">▼</span><span data-a="zin" title="تكبير العنصر">⊕</span><span data-a="zout" title="تصغير العنصر">⊖</span>' +
+      '<span data-a="dup" title="تكرار">⧉</span><span data-a="big" title="تكبير الخط">A+</span><span data-a="sml" title="تصغير الخط">A−</span>' + (free ? '' : '<span data-a="rst" title="إرجاع المكان والحجم الأصلي">↺</span>') + '<span data-a="del" title="حذف / إخفاء">✕</span>';
+    if (free) { if (!el.style.position) el.style.position = 'absolute'; } else if (cs.position === 'static') el.style.position = 'relative';
     el.insertBefore(h, el.firstChild);
+    if (el.offsetTop < 34) { h.style.top = 'auto'; h.style.bottom = '-30px'; }
     h.addEventListener('pointerdown', function (e) {
       var a = e.target.dataset && e.target.dataset.a; if (!a) return; e.preventDefault(); e.stopPropagation();
-      if (a === 'del') { el.remove(); markDirty(); return; }
-      if (a === 'up') { var p = el.previousElementSibling; while (p && (p.classList.contains('orn') || p.classList.contains('bgph'))) p = p.previousElementSibling; if (p) el.parentNode.insertBefore(el, p); markDirty(); fitLive(); return; }
+      if (a === 'del') { if (free || !el.dataset.p) el.remove(); else { el.style.display = 'none'; el.classList.remove('esel'); } markDirty(); fitLive(); return; }
+      if (a === 'rst') { ['top', 'left', 'right', 'bottom', 'transform', 'fontSize'].forEach(function (k) { el.style[k] = ''; }); delete el.dataset.sc; delete el.dataset.tf0; if (getComputedStyle(el).position === 'static') el.style.position = 'relative'; markDirty(); fitLive(); return; }
+      if (a === 'zin' || a === 'zout') {
+        if (el.dataset.tf0 === undefined) { var t0 = el.style.transform || getComputedStyle(el).transform; el.dataset.tf0 = t0 && t0 !== 'none' ? t0 : ''; }
+        var sc = (parseFloat(el.dataset.sc) || 1) * (a === 'zin' ? 1.08 : 1 / 1.08); el.dataset.sc = sc.toFixed(3);
+        el.style.transform = (el.dataset.tf0 ? el.dataset.tf0 + ' ' : '') + 'scale(' + el.dataset.sc + ')'; markDirty(); return;
+      }
+      if (a === 'up') { var p = el.previousElementSibling; while (p && (p.classList.contains('orn') || p.classList.contains('bgph') || p.classList.contains('eh'))) p = p.previousElementSibling; if (p) el.parentNode.insertBefore(el, p); markDirty(); fitLive(); return; }
       if (a === 'dn') { var n = el.nextElementSibling; if (n) el.parentNode.insertBefore(n, el); markDirty(); fitLive(); return; }
-      if (a === 'dup') { var c = el.cloneNode(true); c.querySelectorAll('.eh').forEach(function (x) { x.remove(); }); if (free) { c.style.top = (parseFloat(el.style.top) + 40) + 'px'; } el.parentNode.insertBefore(c, el.nextSibling); enableEdit(); markDirty(); fitLive(); return; }
+      if (a === 'dup') { var c = el.cloneNode(true); c.querySelectorAll('.eh').forEach(function (x) { x.remove(); }); c.removeAttribute('data-p'); c.querySelectorAll('[data-p]').forEach(function (x) { x.removeAttribute('data-p'); });
+        if (free) { c.style.top = (parseFloat(el.style.top) + 40) + 'px'; } else { c.classList.add('free'); c.classList.remove('esel'); c.style.position = 'absolute'; c.style.top = (el.offsetTop + 40) + 'px'; c.style.left = el.offsetLeft + 'px'; c.style.width = el.offsetWidth + 'px'; c.innerHTML = '<div class="ft">' + c.innerHTML + '</div>'; }
+        el.parentNode.insertBefore(c, el.nextSibling); enableEdit(); markDirty(); fitLive(); return; }
       if (a === 'big' || a === 'sml') { var fs = parseFloat(getComputedStyle(el).fontSize) || 20; el.style.fontSize = Math.max(8, fs * (a === 'big' ? 1.1 : 0.9)) + 'px'; el.querySelectorAll('*').forEach(function (x) { if (x.classList.contains('eh') || x.closest('.eh')) return; var f2 = parseFloat(getComputedStyle(x).fontSize); if (f2) x.style.fontSize = Math.max(8, f2 * (a === 'big' ? 1.1 : 0.9)) + 'px'; }); markDirty(); fitLive(); return; }
       if (a === 'drag') startDrag(e, el, free);
+      if (a === 'move') startDrag(e, el, free, 'move');
     });
     el.addEventListener('pointerdown', function () { selectEl(el); });
   }
   function selectEl(el) { var r = liveRoot(); if (!r) return; r.querySelectorAll('.esel').forEach(function (x) { x.classList.remove('esel'); }); el.classList.add('esel'); ED.sel = el; var cs = getComputedStyle(el); $('edColor').value = rgbHex(cs.color); }
   function rgbHex(c) { var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c || ''); if (!m) return '#000000'; return '#' + [m[1], m[2], m[3]].map(function (x) { var h = (+x).toString(16); return h.length < 2 ? '0' + h : h; }).join(''); }
-  function startDrag(e, el, free) {
+  function startDrag(e, el, free, mode) {
     var k = ED.k || 1, sx = e.clientX, sy = e.clientY, root = liveRoot();
+    if (mode === 'move' && !free) {   // تحريك حر لأي عنصر (المثبّت: top/left — العادي: إزاحة نسبية بدون تغيير ترتيب الصفحة)
+      var abs = getComputedStyle(el).position === 'absolute';
+      if (abs) { var t1 = el.offsetTop, l1 = el.offsetLeft; el.style.top = t1 + 'px'; el.style.left = l1 + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto'; }
+      var bt = parseFloat(el.style.top) || 0, bl = parseFloat(el.style.left) || 0;
+      if (!abs) { el.style.position = 'relative'; }
+      var mv0 = function (ev) { el.style.top = (bt + (ev.clientY - sy) / k) + 'px'; el.style.left = (bl + (ev.clientX - sx) / k) + 'px'; };
+      var up0 = function () { document.removeEventListener('pointermove', mv0); document.removeEventListener('pointerup', up0); markDirty(); };
+      document.addEventListener('pointermove', mv0); document.addEventListener('pointerup', up0); return;
+    }
     if (free) {
       var t0 = parseFloat(el.style.top) || 0, r0 = parseFloat(el.style.right) || 0;
       var mv = function (ev) { el.style.top = (t0 + (ev.clientY - sy) / k) + 'px'; el.style.right = (r0 - (ev.clientX - sx) / k) + 'px'; };
@@ -3005,6 +3081,165 @@ td.k{color:var(--muted);font-size:12.5px}
   $('rtFromCost').addEventListener('click', ratesFromCosting);
   RAPI.list().catch(function () {});
 
+  /* ===================== دفعة 7: قوالبي · المفضلة · الترتيب · رسوم الغرفة · الربط بالرحلة ===================== */
+  var UTPL = [], FAV = [];
+  try { FAV = JSON.parse(localStorage.getItem(LS + '.fav') || '[]') || []; } catch (e) { FAV = []; }
+  function saveFav() { try { localStorage.setItem(LS + '.fav', JSON.stringify(FAV)); } catch (e) {} }
+  var TAPI = {
+    list: function () { return rpc('tc_tpls').then(function (r) { UTPL = r || []; return UTPL; }); },
+    save: function (o) { return rpc('tc_tpl_save', { p: o }).then(function (r) { UTPL = r || []; return UTPL; }); },
+    del: function (id) { return rpc('tc_tpl_delete', { p_id: id }).then(function (r) { UTPL = r || []; return UTPL; }); }
+  };
+  function canEdit() { return typeof CAN === 'undefined' || !!CAN.edit; }
+  function clone(o) { return o == null ? o : JSON.parse(JSON.stringify(o)); }
+
+  // ترقيم ثابت لكل عنصر في التصميم المرسوم ⇒ التعديلات اليدوية تتسجل كـ«باتش» يُطبَّق على أي تكلفة بأرقامها
+  function tagLive() {
+    var root = liveRoot(); if (!root) return; ED.orig = {};
+    var tag = function (el, path) { Array.prototype.forEach.call(el.children, function (c, i) { var p = path ? path + '.' + i : String(i); c.setAttribute('data-p', p);
+      if (!c.querySelector('*:not(br)')) ED.orig[p] = c.innerHTML; tag(c, p); }); };
+    tag(root, '');
+  }
+  function cleanInner(el) { var c = el.cloneNode(true); c.querySelectorAll('.eh').forEach(function (x) { x.remove(); }); return c.innerHTML; }
+  function capturePatch() {
+    var root = liveRoot(), st = [], tx = [], ord = [], fr = [];
+    if (!root) return null;
+    root.querySelectorAll('[data-p]').forEach(function (el) {
+      if (el.closest('.free')) return;
+      var p = el.dataset.p, a = el.getAttribute('style'); if (a) st.push([p, a]);
+      if (ED.orig && ED.orig[p] !== undefined) { var h = cleanInner(el); if (h !== ED.orig[p] && !/\d/.test(ED.orig[p]) && !/\d/.test(h.replace(/<[^>]+>/g, ''))) tx.push([p, h]); }
+    });
+    var chk = function (par, pp) { var kids = Array.prototype.filter.call(par.children, function (c) { return c.dataset && c.dataset.p && !c.classList.contains('free'); }).map(function (c) { return c.dataset.p; });
+      var sorted = kids.slice().sort(function (a, b) { return +a.split('.').pop() - +b.split('.').pop(); }); if (kids.join('|') !== sorted.join('|')) ord.push([pp, kids]); };
+    chk(root, ''); root.querySelectorAll('[data-p]').forEach(function (el) { if (el.children.length > 1) chk(el, el.dataset.p); });
+    root.querySelectorAll('.free').forEach(function (f) { var c = f.cloneNode(true); c.querySelectorAll('.eh').forEach(function (x) { x.remove(); }); c.querySelectorAll('[contenteditable]').forEach(function (x) { x.removeAttribute('contenteditable'); }); c.removeAttribute('contenteditable'); c.classList.remove('esel'); fr.push(c.outerHTML); });
+    return { st: st, tx: tx, ord: ord, fr: fr, rs: root.getAttribute('style') || '' };
+  }
+  function applyPatch(pt) {
+    var root = liveRoot(); if (!root || !pt) return;
+    var q = function (p) { return root.querySelector('[data-p="' + p + '"]'); };
+    (pt.ord || []).forEach(function (o) { var par = o[0] ? q(o[0]) : root; if (!par) return; o[1].forEach(function (p) { var c = par.querySelector(':scope > [data-p="' + p + '"]'); if (c) par.appendChild(c); }); });
+    (pt.st || []).forEach(function (x) { var el = q(x[0]); if (el) el.setAttribute('style', x[1]); });
+    (pt.tx || []).forEach(function (x) { var el = q(x[0]); if (el) el.innerHTML = x[1]; });
+    (pt.fr || []).forEach(function (h) { root.insertAdjacentHTML('beforeend', h); });
+    if (pt.rs) root.setAttribute('style', pt.rs);
+  }
+  // صور الشركة المدمجة لا تُخزَّن مع القالب (توفير المساحة) — تُستبدل برمز وتُرجع عند التطبيق
+  function stripCo(o) { var t = JSON.stringify(o); if (typeof COIMG !== 'undefined') Object.keys(COIMG).forEach(function (k) { t = t.split(COIMG[k]).join('{{CO:' + k + '}}'); }); return JSON.parse(t); }
+  function restoreCo(o) { var t = JSON.stringify(o); if (typeof COIMG !== 'undefined') t = t.replace(/\{\{CO:(\w+)\}\}/g, function (m, k) { return COIMG[k] || ''; }); return JSON.parse(t); }
+  var UT_SET = ['pal', 'font', 'show', 'hijri', 'colRev', 'title', 'sub', 'inc', 'req', 'showInc', 'showReq', 'showDist', 'noLbl', 'brand', 'brand2', 'bg'];
+  function saveUtpl() {
+    var nm = ($('ctName').value || '').trim(); if (!nm) { toast('اكتب اسم القالب'); $('ctName').focus(); return; }
+    if (!canEdit()) { toast('لا تملك صلاحية تعديل التكاليف لحفظ القوالب'); return; }
+    var pt = capturePatch(); if (!pt) { toast('افتح تصميماً أولاً'); return; }
+    var old = UTPL.filter(function (x) { return norm(x.name) === norm(nm); })[0], set = {};
+    UT_SET.forEach(function (k) { if (ST[k] !== undefined) set[k] = clone(ST[k]); });
+    var o = stripCo({ id: old ? old.id : 'ut' + Date.now(), name: nm, base: ST.tpl, set: set, patch: pt });
+    if (JSON.stringify(o).length > 1400000) { toast('القالب كبير (صور كثيرة) — صغّر/احذف صورة الخلفية أو الصور المضافة'); return; }
+    var b = $('ctSave'); b.disabled = true;
+    TAPI.save(o).then(function (l) { UTPL = l || UTPL; ST.upatch = { id: o.id, base: o.base, patch: pt }; if (FAV.indexOf('u:' + o.id) < 0) { FAV.unshift('u:' + o.id); saveFav(); } renderStudio(); toast((old ? '✅ اتحدّث القالب «' : '✅ اتحفظ القالب «') + nm + '» (ومضاف للمفضلة)'); },
+      function (e) { toast('❌ ' + String((e && e.message) || e)); }).then(function () { if ($('ctSave')) $('ctSave').disabled = false; });
+  }
+  function applyUtpl(id) {
+    var u = UTPL.filter(function (x) { return x.id === id; })[0]; if (!u) return;
+    var set = restoreCo(u.set || {}); Object.keys(set).forEach(function (k) { ST[k] = set[k]; });
+    ST.tpl = DTPL.some(function (t) { return t[0] === u.base; }) ? u.base : ST.tpl; ST.upatch = { id: u.id, base: u.base, patch: restoreCo(u.patch) };
+    delete ST.custom[ST.tpl]; saveSTg(); renderStudio(); sdraw(); toast('📁 القالب «' + u.name + '» — بأرقام التكلفة الحالية');
+  }
+  function toggleFav(k) { var i = FAV.indexOf(k); if (i >= 0) FAV.splice(i, 1); else FAV.unshift(k); saveFav(); }
+  function tplGroupHtml() {
+    var star = function (k) { return '<i class="fv' + (FAV.indexOf(k) >= 0 ? ' on' : '') + '" data-fv="' + esc(k) + '" title="' + (FAV.indexOf(k) >= 0 ? 'إزالة من المفضلة' : 'إضافة للمفضلة') + '">' + (FAV.indexOf(k) >= 0 ? '★' : '☆') + '</i>'; };
+    var btn = function (t) { return '<button type="button" data-tpl="' + t[0] + '" class="' + (ST.tpl === t[0] && !ST.upatch ? 'on' : '') + '" title="' + esc(t[2]) + '">' + t[1] + star(t[0]) + '</button>'; };
+    var ub = function (u) { return '<button type="button" data-ut="' + u.id + '" class="ut' + (ST.upatch && ST.upatch.id === u.id ? ' on' : '') + '" title="قالب محفوظ على «' + esc((DTPL.filter(function (t) { return t[0] === u.base; })[0] || [0, u.base])[1]) + '» · ' + esc(u.by || '') + ' ' + esc(u.at || '') + '">📁 ' + esc(u.name) + star('u:' + u.id) + (canEdit() ? '<i class="fv del" data-ud="' + u.id + '" title="حذف القالب">✕</i>' : '') + '</button>'; };
+    var favs = FAV.map(function (k) { if (k.indexOf('u:') === 0) { var u = UTPL.filter(function (x) { return 'u:' + x.id === k; })[0]; return u ? ub(u) : ''; } var t = DTPL.filter(function (x) { return x[0] === k; })[0]; return t ? btn(t) : ''; }).filter(Boolean);
+    return '<div class="grp"><b>القالب</b>' + (favs.length ? '<div class="tsub">⭐ المفضلة</div><div class="tgrid">' + favs.join('') + '</div>' : '<div class="hint">اضغط ☆ على أي قالب لإضافته للمفضلة.</div>') +
+      (UTPL.length ? '<div class="tsub">📁 قوالبي المحفوظة (' + UTPL.length + ')</div><div class="tgrid">' + UTPL.map(ub).join('') + '</div>' : '') +
+      '<div class="tsub">كل القوالب (' + DTPL.length + ')</div><div class="tgrid">' + DTPL.map(btn).join('') + '</div></div>';
+  }
+  function wireTplGroup(O, on) {
+    on('[data-fv]', 'click', function (x, e) { e.stopPropagation(); e.preventDefault(); if (x.dataset.ud) return; toggleFav(x.dataset.fv); renderStudio(); });
+    on('[data-ut]', 'click', function (x, e) { if (e.target.closest('[data-fv],[data-ud]')) return; applyUtpl(x.dataset.ut); });
+    on('[data-ud]', 'click', function (x, e) { e.stopPropagation(); e.preventDefault();
+      if (x.dataset.sure !== '1') { x.dataset.sure = '1'; x.textContent = 'تأكيد؟'; setTimeout(function () { x.dataset.sure = ''; x.textContent = '✕'; }, 3000); return; }
+      TAPI.del(x.dataset.ud).then(function (l) { UTPL = l || UTPL; if (ST.upatch && ST.upatch.id === x.dataset.ud) ST.upatch = null; renderStudio(); toast('حُذف القالب'); }, function (er) { toast('❌ ' + String((er && er.message) || er)); }); });
+    on('#ctSave', 'click', saveUtpl);
+    on('#ctShow', 'click', function () { var r = liveRoot(); if (!r) return; var n = 0; r.querySelectorAll('[data-p]').forEach(function (el) { if (el.style.display === 'none') { el.style.display = ''; n++; } }); markDirty(); fitLive(); toast(n ? '👁 رجع ' + n + ' عنصر' : 'لا توجد عناصر مخفية'); });
+  }
+  // ترتيب المستويات (الاستوديو + صورة المصمم)
+  function fullOrd(ord) { var n = S.levels.length, o = (ord || []).filter(function (i) { return i < n; }); for (var i = 0; i < n; i++) if (o.indexOf(i) < 0) o.push(i); return o; }
+  function moveOrd(ord, i, d) { var o = fullOrd(ord), p = o.indexOf(i), q = p + d; if (p < 0 || q < 0 || q >= o.length) return o; o.splice(q, 0, o.splice(p, 1)[0]); return o; }
+  function lvOrdHtml(px, ord, pre) {
+    var o = fullOrd(ord), C = compute();
+    return '<div class="lvord">' + o.map(function (i, pos) { var l = S.levels[i] || {}, nm = (l.label || LBL0[i] || ('مستوى ' + (i + 1))) + ((C.levels[i] || {}).name ? ' — ' + C.levels[i].name : '');
+      return '<div class="lvo">' + (pre ? pre(i) : '') + '<span>' + (pos + 1) + '. ' + esc(nm) + '</span><button type="button" class="sm" data-' + px + '="-1" data-i="' + i + '"' + (pos ? '' : ' disabled') + ' title="لأعلى">▲</button><button type="button" class="sm" data-' + px + '="1" data-i="' + i + '"' + (pos < o.length - 1 ? '' : ' disabled') + ' title="لأسفل">▼</button></div>'; }).join('') + '</div>';
+  }
+
+  // رسوم الغرفة من إعدادات البرنامج (VIP / عادي بالفترة / تجديد باركود) + رسوم غرفة المشرف
+  var RCFG = { vipRoomFee: 3100, supRoomFee: 200, roomFeePeriods: [], barcodePeriods: [], demo: true };
+  function periodFee(list, dmy) { var d = dParse(dmy) || new Date(), hit = null; (list || []).forEach(function (p) { var f = dParse(p.from), t = dParse(p.to); if ((!f || f <= d) && (!t || d <= t)) hit = p; }); return hit ? num(hit.price) : null; }
+  function roomAuto() {
+    if (!S || !$('cRoomSrc')) return;
+    if (!S.roomAuto || !RCFG) { if ($('cRoomSrc').textContent !== '(يدوي)') $('cRoomSrc').textContent = ''; return; }
+    var t = S.roomType || 'VIP', fee = t === 'VIP' ? num(RCFG.vipRoomFee) : periodFee(t === 'تجديد باركود' ? RCFG.barcodePeriods : RCFG.roomFeePeriods, S.goDate);
+    if (fee != null && fee > 0 && String(S.room) !== String(fee)) { S.room = fee; $('cRoom').value = fee; }
+    if (!S.sRoomMan && RCFG.supRoomFee != null && String(S.sRoom) !== String(RCFG.supRoomFee)) { S.sRoom = RCFG.supRoomFee; $('sRoom').value = S.sRoom; }
+    $('cRoomSrc').textContent = fee != null && fee > 0 ? '(من إعدادات البرنامج' + (RCFG.demo ? ' — معاينة' : '') + ')' : '(لا توجد فترة سارية في الإعدادات)';
+  }
+
+  // تكلفة جديدة فاضية: الفنادق والأسعار والتواريخ فاضية — والثوابت (تأشيرة/نقل/هوامش/مشرف) من آخر تكلفة محفوظة
+  var KEEP = ['air', 'route', 'routeOther', 'pax', 'rate', 'rateSrc', 'visa', 'bus', 'adv', 'roomType', 'quadLbl', 'kbOn', 'kbFrom', 'kbDisc', 'kAge', 'kbAge', 'paxScen', 'sCount', 'sType', 'sDaily', 'sTkCur', 'supMode', 'supFixed', 'mOn', 'mAmt', 'co', 'rep', 'x3', 'x2', 'x1', 'kSale', 'iMode', 'iTicket', 'iProfit', 'iFixed'];
+  function newBlank() {
+    cur = null; var last = store.slice().sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); })[0], src = last ? last.data : DEF;
+    S = JSON.parse(JSON.stringify(DEF)); KEEP.forEach(function (k) { if (src[k] !== undefined) S[k] = clone(src[k]); });
+    ['name', 'goDate', 'backDate', 'goTime', 'backTime', 'flights', 'ticket', 'kTicket', 'sDays', 'sTkChg'].forEach(function (k) { S[k] = ''; });
+    S.files = []; S.extra = []; S.addons = []; S.exp = {}; S.role = ''; delete S.trip; delete S.linkTo; delete S.md; delete S.nMd; delete S.nMk;
+    var sMd = { id: segId(), city: 'md', other: '', nights: '', shared: true, hotel: newHotel() }, sMk = { id: segId(), city: 'mk', other: '', nights: '', shared: false, hotel: newHotel() };
+    S.segs = [sMd, sMk]; S.levels = [0, 1, 2].map(function () { var h = {}; h[sMk.id] = newHotel(); return { label: '', name: '', h: h }; });
+    S.roomAuto = true; S.sRoomMan = false;
+  }
+  // اسم المستوى من التكاليف السابقة: فندق مكة ⇒ آخر مسمّى استُخدم معه
+  function inferLabels() {
+    var map = {}; store.slice().sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); }).forEach(function (r) { var d = r.data || {}; (d.levels || []).forEach(function (l, li) { var lb = l.label != null && l.label !== '' ? l.label : LBL0[li]; if (!lb) return;
+      (d.segs || []).forEach(function (sg) { if (sg.city !== 'mk' || sg.shared) return; var h = (l.h || {})[sg.id]; var k = norm(h && h.name); if (k && !map[k]) map[k] = lb; }); }); });
+    var ch = 0; S.levels.forEach(function (l) { if (l.label) return; S.segs.forEach(function (sg) { if (l.label || sg.city !== 'mk' || sg.shared) return; var h = (l.h || {})[sg.id], k = norm(h && h.name); if (k && map[k]) { l.label = map[k]; ch++; } }); });
+    if (ch) { renderHotels(); recalc(); toast('🏷️ اسم المستوى اتعرف من التكاليف السابقة'); }
+  }
+  $('levels').addEventListener('change', function (e) { if (e.target.matches && e.target.matches('[data-k="name"]')) setTimeout(inferLabels, 0); });
+  function costText(r) { var d = r.data || {}, t = [d.name, d.trip && d.trip.name, d.goDate, d.backDate]; (d.levels || []).forEach(function (l) { t.push(l.label); Object.keys(l.h || {}).forEach(function (k) { t.push((l.h[k] || {}).name); }); }); (d.segs || []).forEach(function (sg) { if (sg.shared && sg.hotel) t.push(sg.hotel.name); }); return t.filter(Boolean).join(' '); }
+  $('listQ').addEventListener('input', renderList);
+
+  // فتح التكلفة من شاشة الرحلة: مفلترة على تكلفتها — ولو مش مرتبطة: تكلفة جديدة / ربط تكلفة موجودة / إغلاق
+  function openRec(r) { cur = r.id; S = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(JSON.stringify(r.data))); fill(); renderList(); try { if (typeof loadLog === 'function') loadLog(cur); } catch (e) {} }
+  function openForTrip(name) {
+    name = String(name || '').trim(); if (!name) return false;
+    var k = norm(name), mine = store.filter(function (r) { return r.data.trip && norm(r.data.trip.name) === k; });
+    var hit = mine.filter(function (r) { return r.data.role !== 'draft'; })[0] || mine[0];
+    if (hit) { openRec(hit); $('listQ').value = name; renderList(); toast('💰 تكلفة رحلة «' + name + '»' + (mine.length > 1 ? ' (+' + (mine.length - 1) + ' مسودة)' : '')); return true; }
+    $('nlName').textContent = name; $('ov5').dataset.trip = name;
+    var opts = store.slice().sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+    $('nlSel').innerHTML = '<option value="">— اختر تكلفة محفوظة —</option>' + opts.map(function (r) { return '<option value="' + r.id + '">' + esc(r.data.name || 'بدون اسم') + (r.data.goDate ? ' · ' + esc(r.data.goDate) : '') + (r.data.trip ? ' (مربوطة برحلة «' + esc(r.data.trip.name) + '» — هتتعمل نسخة)' : '') + '</option>'; }).join('');
+    $('ov5').hidden = false; return false;
+  }
+  $('nlX').addEventListener('click', function () { $('ov5').hidden = true; });
+  $('nlClose').addEventListener('click', function () { $('ov5').hidden = true; try { if (typeof HOST !== 'undefined' && HOST) { HOST.close(); return; } } catch (e) {} });
+  $('nlNew').addEventListener('click', function () { var nm = $('ov5').dataset.trip; newBlank(); S.name = nm; S.linkTo = nm; fill(); renderList(); $('ov5').hidden = true; toast('➕ تكلفة جديدة لرحلة «' + nm + '» — بعد التسجيل اضغط «🚀 فتح الرحلة وتسجيل التسعير» وهيتملي اسم الرحلة تلقائياً'); });
+  $('nlPick').addEventListener('click', function () {
+    var id = $('nlSel').value, nm = $('ov5').dataset.trip; if (!id) { toast('اختر التكلفة'); return; }
+    var r = store.filter(function (x) { return x.id === id; })[0]; if (!r) return;
+    if (r.data.trip) { cur = null; S = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(JSON.stringify(r.data))); delete S.trip; S.role = ''; S.name = nm; fill(); renderList(); toast('📄 التكلفة دي مربوطة برحلة تانية — اتعملت نسخة منها لربطها برحلة «' + nm + '» (احفظها)'); }
+    else openRec(r);
+    S.linkTo = nm; $('ov5').hidden = true;
+    var bt = $('btnTrip'); if (bt && !bt.hidden) setTimeout(function () { bt.click(); }, 50); else toast('اضغط «🚀 فتح الرحلة وتسجيل التسعير» واختار رحلة «' + nm + '»');
+  });
+  var TRIPN = null;
+  function loadTripNames() {
+    var put = function (a) { $('tpTrips').innerHTML = a.map(function (n) { return '<option value="' + esc(n) + '">'; }).join(''); };
+    if (TRIPN) { put(TRIPN); return; }
+    gas('getTripsList', [HOST.token()]).then(function (r) { var arr = Array.isArray(r) ? r : (r && (r.trips || r.data || r.rows || r.list)) || [];
+      TRIPN = arr.map(function (x) { return typeof x === 'string' ? x : (x && (x.name || x.tripName || x.trip || x['اسم الرحلة'])) || ''; }).filter(Boolean); put(TRIPN); }).catch(function () {});
+  }
+  window.__tc = { openForTrip: openForTrip };
+
   // البداية: تحميل التكاليف والصلاحيات من القاعدة
   function applyCan() {
     $('btnNew').hidden = !CAN.add; $('btnCopy').hidden = !CAN.add; $('btnTrip').hidden = $('btnTrip').hidden || !(CAN.edit && CAN.pricing);
@@ -3012,8 +3247,7 @@ td.k{color:var(--muted);font-size:12.5px}
   }
   function start(firstOpen) {
     if (firstOpen) { cur = firstOpen.id; S = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(JSON.stringify(firstOpen.data))); }
-    else if (HIST.length) { S = applyHist(JSON.parse(JSON.stringify(DEF)), HIST[0]); S.name = ''; S.goDate = ''; S.backDate = ''; normalize(S); S.segs.forEach(function (sg) { if (sg.city === 'mk') sg.nights = ''; }); }
-    else S = JSON.parse(JSON.stringify(DEF));
+    else newBlank();   // (دفعة 7) الشاشة تفتح على تكلفة فاضية
     renderHotelList(); fill(); renderList(); applyCan(); if (cur) loadLog(cur);
   }
   $('btnClose').addEventListener('click', function () { try { HOST.close(); } catch (e) { window.close(); } });
@@ -3024,6 +3258,9 @@ td.k{color:var(--muted);font-size:12.5px}
       store = (r.rows || []).map(fromRow); HIST = r.seed || []; if (r.brands && r.brands.length) BR = r.brands; CAN = r.can || CAN;
       $('bootMsg').hidden = true; var want = null; try { var o = HOST.openId && HOST.openId(); if (o) want = store.filter(function (x) { return x.id === o || x.data.trip && x.data.trip.name === o; })[0]; } catch (e) {}
       start(want);
+      TAPI.list().catch(function () {});
+      gas('getAccPricing', [HOST.token()]).then(function (r) { var c = r && (r.cfg || r); if (c && (c.roomFeePeriods || c.vipRoomFee != null)) { RCFG = c; if (S) recalc(); } }).catch(function () {});
+      try { var o2 = HOST.openId && HOST.openId(); if (o2 && !(want && want.id === o2)) openForTrip(o2); } catch (e2) {}
     }, function (e) { $('bootMsg').textContent = '❌ ' + errT(e); S = JSON.parse(JSON.stringify(DEF)); renderHotelList(); fill(); renderList(); });
   })();
 })();
