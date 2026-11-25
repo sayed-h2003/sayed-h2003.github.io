@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>نسخة الطوارئ</title>
+<style>
+:root{--bg:#f4f6f5;--fg:#13231d;--mut:#5d6f67;--ac:#0d5e51;--ln:#d6e2dc;--card:#fff;--hot:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 Tahoma,"Segoe UI",Arial,sans-serif}
+header{background:var(--ac);color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header b{font-size:17px}header small{opacity:.85}.warn{background:#fff3cd;color:#7a5a00;padding:6px 16px;font-size:13px}
+nav{display:flex;gap:6px;padding:8px 16px;flex-wrap:wrap}nav button{border:1px solid var(--ln);background:var(--card);border-radius:8px;padding:6px 12px;cursor:pointer;font:inherit}
+nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{padding:0 16px 30px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+input,select{font:inherit;padding:6px 8px;border:1px solid var(--ln);border-radius:8px;min-width:0}
+table{border-collapse:collapse;width:100%;background:var(--card);font-size:13px}th,td{border:1px solid var(--ln);padding:5px 6px;text-align:right;vertical-align:top}
+th{background:#e8f1ed;position:sticky;top:0}td.n{direction:ltr;text-align:left;white-space:nowrap}tr.tot td{font-weight:700;background:#f3f7f5}
+.hint{color:var(--mut);font-size:12px}.neg{color:var(--hot)}.box{max-height:70vh;overflow:auto;border:1px solid var(--ln);border-radius:8px}
+@media print{header,nav,.row,.warn .np{display:none!important}.box{max-height:none;overflow:visible;border:0}th{position:static}body{background:#fff}}
+</style></head><body>
+<header><b>🆘 نسخة الطوارئ — منظومة العمرة</b><small id="hdr"></small><span style="flex:1"></span><button onclick="print()" style="font:inherit;border:0;border-radius:8px;padding:5px 12px;cursor:pointer">🖨️ طباعة / PDF</button></header>
+<div class="warn">⚠️ نسخة للعرض فقط وقت انقطاع الإنترنت — بيانات لحظة إنشائها. أي عملية جديدة تتسجل في البرنامج بعد رجوع النت.</div>
+<nav id="tabs"></nav><main id="main"></main>
+<script id="drData" type="application/json">__DR_DATA__</script>
+<script>
+(function () {
+  var D; try { D = JSON.parse(document.getElementById('drData').textContent); } catch (e) { D = null; }
+  if (!D || !D.acc) { document.getElementById('main').innerHTML = '<p>لا توجد بيانات في الملف.</p>'; return; }
+  var E = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var F = function (n) { n = Number(n) || 0; return n ? n.toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''; };
+  var N = function (s) { return String(s || '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').toLowerCase(); };
+  var DK = function (s) { var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s || ''); return m ? +m[3] * 1e4 + +m[2] * 100 + +m[1] : 0; };
+  var ACC = {}; D.acc.forEach(function (a) { ACC[a[0]] = a; });
+  document.getElementById('hdr').textContent = 'بتاريخ ' + D.at + (D.by ? ' · بواسطة ' + D.by : '') + ' · ' + D.acc.length + ' حساب · ' + D.ln.length + ' سطر قيد · ' + D.tr.length + ' رحلة · ' + D.pg.length + ' معتمر';
+  var TABS = [['st', '📒 كشف حساب'], ['q', '🔎 بحث في القيود'], ['tr', '🚌 الرحلات'], ['pg', '🕋 المعتمرين']], cur = 'st', M = document.getElementById('main');
+  function tabs() { document.getElementById('tabs').innerHTML = TABS.map(function (t) { return '<button data-t="' + t[0] + '" class="' + (cur === t[0] ? 'on' : '') + '">' + t[1] + '</button>'; }).join(''); }
+  document.getElementById('tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-t]'); if (b) { cur = b.dataset.t; draw(); } });
+  function lnTable(rows, bal) {
+    var h = '<div class="box"><table><thead><tr><th>التاريخ</th><th>القيد</th><th>المرجع</th><th>البيان</th><th>الرحلة / العميل</th>' + (bal ? '' : '<th>الحساب</th>') + '<th>العملة</th><th>مدين</th><th>دائن</th>' + (bal ? '<th>الرصيد</th>' : '') + '</tr></thead><tbody>', run = {}, tD = {}, tC = {};
+    rows.forEach(function (l) { var c = l[5] || 'EGP'; run[c] = (run[c] || 0) + (+l[3] || 0) - (+l[4] || 0); tD[c] = (tD[c] || 0) + (+l[3] || 0); tC[c] = (tC[c] || 0) + (+l[4] || 0);
+      h += '<tr><td class="n">' + E(l[1]) + '</td><td class="n">' + E(l[0]) + '</td><td>' + E(l[12]) + '</td><td>' + E(l[10]) + (l[11] ? ' <span class="hint">(' + E(l[11]) + ')</span>' : '') + '</td><td>' + E([l[8], l[9]].filter(Boolean).join(' / ')) + '</td>' +
+        (bal ? '' : '<td>' + E((ACC[l[2]] || [l[2], ''])[1]) + '</td>') + '<td>' + E(c) + '</td><td class="n">' + F(l[3]) + '</td><td class="n">' + F(l[4]) + '</td>' + (bal ? '<td class="n' + (run[c] < 0 ? ' neg' : '') + '">' + F(run[c]) + '</td>' : '') + '</tr>'; });
+    Object.keys(tD).forEach(function (c) { h += '<tr class="tot"><td colspan="' + (bal ? 5 : 6) + '">الإجمالي ' + E(c) + '</td><td>' + E(c) + '</td><td class="n">' + F(tD[c]) + '</td><td class="n">' + F(tC[c]) + '</td>' + (bal ? '<td class="n' + (tD[c] - tC[c] < 0 ? ' neg' : '') + '">' + F(tD[c] - tC[c]) + '</td>' : '') + '</tr>'; });
+    return h + '</tbody></table></div><div class="hint">' + rows.length + ' سطر</div>';
+  }
+  var ST = { acc: '', from: '', to: '' }, Q = '', TQ = '', PQ = '';
+  function kids(code) { var out = {}; out[code] = 1; var more = true; while (more) { more = false; D.acc.forEach(function (a) { if (a[3] && out[a[3]] && !out[a[0]]) { out[a[0]] = 1; more = true; } }); } return out; }
+  function draw() {
+    tabs(); M.onclick = null;
+    if (cur === 'st') {
+      M.innerHTML = '<div class="row"><input id="sA" list="accL" placeholder="اكتب اسم العميل/المورد/الحساب أو الكود" style="flex:1;min-width:260px" value="' + E(ST.acc) + '"><datalist id="accL">' + D.acc.map(function (a) { return '<option value="' + E(a[0] + ' — ' + a[1]) + '">'; }).join('') + '</datalist>' +
+        '<label>من <input id="sF" placeholder="DD/MM/YYYY" size="10" value="' + E(ST.from) + '"></label><label>إلى <input id="sT" placeholder="DD/MM/YYYY" size="10" value="' + E(ST.to) + '"></label></div><div id="sOut"></div>';
+      var go = function () { ST.acc = document.getElementById('sA').value; ST.from = document.getElementById('sF').value; ST.to = document.getElementById('sT').value;
+        var code = ST.acc.split(' — ')[0].trim(), a = ACC[code], o = document.getElementById('sOut');
+        if (!a) { var q = N(ST.acc), hit = q ? D.acc.filter(function (x) { return N(x[1]).indexOf(q) >= 0 || String(x[0]).indexOf(q) === 0; }).slice(0, 30) : [];
+          o.innerHTML = hit.length ? '<div class="hint">اختار الحساب:</div>' + hit.map(function (x) { return '<div><a href="#" data-c="' + E(x[0]) + '">' + E(x[0] + ' — ' + x[1]) + '</a></div>'; }).join('') : '<p class="hint">اكتب جزء من اسم الحساب.</p>'; return; }
+        var K = a[4] ? kids(code) : null, f = DK(ST.from), t = DK(ST.to), open = {}, rows = [];
+        D.ln.forEach(function (l) { if (K ? !K[l[2]] : l[2] !== code) return; var d = DK(l[1]); if (f && d < f) { var c = l[5] || 'EGP'; open[c] = (open[c] || 0) + (+l[3] || 0) - (+l[4] || 0); return; } if (t && d > t) return; rows.push(l); });
+        rows.sort(function (x, y) { return DK(x[1]) - DK(y[1]); });
+        var pre = Object.keys(open).map(function (c) { return [ '', ST.from, code, open[c] > 0 ? open[c] : 0, open[c] < 0 ? -open[c] : 0, c, 0, 0, '', '', 'رصيد ما قبل الفترة', '', '' ]; });
+        o.innerHTML = '<h3>' + E(a[0] + ' — ' + a[1]) + (a[4] ? ' <span class="hint">(حساب تجميعي — يشمل الفرعية)</span>' : '') + '</h3>' + lnTable(pre.concat(rows), true);
+      };
+      M.onclick = function (e) { var x = e.target.closest('[data-c]'); if (x) { e.preventDefault(); var a = ACC[x.dataset.c]; document.getElementById('sA').value = a[0] + ' — ' + a[1]; go(); } };
+      ['sA', 'sF', 'sT'].forEach(function (id) { document.getElementById(id).addEventListener('change', go); });
+      document.getElementById('sA').addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
+      if (ST.acc) go();
+    } else if (cur === 'q') {
+      M.innerHTML = '<div class="row"><input id="qQ" placeholder="بحث في البيان / الرحلة / العميل / رقم القيد / المرجع" style="flex:1" value="' + E(Q) + '"></div><div id="qOut"></div>';
+      var g2 = function () { Q = document.getElementById('qQ').value; var q = N(Q); if (q.length < 2) { document.getElementById('qOut').innerHTML = '<p class="hint">اكتب حرفين على الأقل.</p>'; return; }
+        var rows = D.ln.filter(function (l) { return N([l[0], l[8], l[9], l[10], l[12]].join(' ')).indexOf(q) >= 0; }).slice(0, 1500); document.getElementById('qOut').innerHTML = lnTable(rows, false); };
+      document.getElementById('qQ').addEventListener('input', g2); g2();
+    } else if (cur === 'tr') {
+      M.innerHTML = '<div class="row"><input id="tQ" placeholder="بحث باسم الرحلة / الشركة / الوكيل / الفندق" style="flex:1" value="' + E(TQ) + '"></div><div id="tOut"></div>';
+      var g3 = function () { TQ = document.getElementById('tQ').value; var q = N(TQ), rows = D.tr.filter(function (r) { return !q || N(r.join(' ')).indexOf(q) >= 0; });
+        document.getElementById('tOut').innerHTML = '<div class="box"><table><thead><tr><th>الرحلة</th><th>الشركة</th><th>الوكيل</th><th>الوصول</th><th>المغادرة</th><th>العدد</th><th>فندق مكة</th><th>فندق المدينة</th><th>المعتمرين</th></tr></thead><tbody>' +
+          rows.map(function (r) { var n = D.pg.filter(function (p) { return p[3] === r[0]; }).length; return '<tr><td>' + E(r[0]) + '</td><td>' + E(r[1]) + '</td><td>' + E(r[2]) + '</td><td class="n">' + E(r[3]) + '</td><td class="n">' + E(r[4]) + '</td><td class="n">' + E(r[5]) + '</td><td>' + E(r[6]) + '</td><td>' + E(r[7]) + '</td><td><a href="#" data-tp="' + E(r[0]) + '">' + n + '</a></td></tr>'; }).join('') + '</tbody></table></div>'; };
+      document.getElementById('tQ').addEventListener('input', g3); g3();
+      M.onclick = function (e) { var x = e.target.closest('[data-tp]'); if (x) { e.preventDefault(); PQ = x.dataset.tp; cur = 'pg'; draw(); } };
+    } else {
+      M.innerHTML = '<div class="row"><input id="pQ" placeholder="بحث بالاسم / رقم الجواز / الرحلة / العميل" style="flex:1" value="' + E(PQ) + '"></div><div id="pOut"></div>';
+      var g4 = function () { PQ = document.getElementById('pQ').value; var q = N(PQ), rows = D.pg.filter(function (r) { return !q || N(r.join(' ')).indexOf(q) >= 0; }).slice(0, 3000);
+        document.getElementById('pOut').innerHTML = '<div class="box"><table><thead><tr><th>#</th><th>الاسم</th><th>الجواز</th><th>العميل</th><th>الرحلة</th><th>رقم الحجز</th><th>النوع</th><th>فندق مكة</th><th>فندق المدينة</th><th>الغرفة</th></tr></thead><tbody>' +
+          rows.map(function (r, i) { return '<tr><td class="n">' + (i + 1) + '</td><td>' + E(r[0]) + '</td><td class="n">' + E(r[1]) + '</td><td>' + E(r[2]) + '</td><td>' + E(r[3]) + '</td><td class="n">' + E(r[4]) + '</td><td>' + E(r[5]) + '</td><td>' + E(r[6]) + '</td><td>' + E(r[7]) + '</td><td class="n">' + E(r[8]) + '</td></tr>'; }).join('') + '</tbody></table></div><div class="hint">' + rows.length + ' معتمر</div>'; };
+      document.getElementById('pQ').addEventListener('input', g4); g4();
+    }
+  }
+  draw();
+})();
+</script></body></html>

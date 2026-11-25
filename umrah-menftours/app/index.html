@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>منظومة العمرة</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0d5e51">
+<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box}body{margin:0;font:15px/1.6 Tahoma,"Segoe UI",Arial,sans-serif;background:#f4f6f5;color:#13231d}
+.wrap{max-width:560px;margin:0 auto;padding:24px 16px}h1{font-size:20px;margin:0 0 4px}.st{font-size:13px;color:#5d6f67;margin-bottom:16px}
+.card{background:#fff;border:1px solid #d6e2dc;border-radius:14px;padding:16px;margin-bottom:12px}
+button,.btn{display:block;width:100%;font:inherit;font-weight:700;padding:12px;border-radius:10px;border:1px solid #0d5e51;background:#0d5e51;color:#fff;cursor:pointer;text-align:center;text-decoration:none;margin-top:8px}
+.alt{background:#fff;color:#0d5e51}input{width:100%;font:inherit;padding:8px;border:1px solid #d6e2dc;border-radius:8px;margin-top:6px}
+.hint{font-size:12px;color:#5d6f67}.off{background:#fff3cd;color:#7a5a00;border-radius:10px;padding:8px 12px;margin-bottom:12px;display:none}
+#view{position:fixed;inset:0;background:#fff;display:none}#view iframe{border:0;width:100%;height:100%}#close{position:fixed;top:8px;left:8px;width:auto;z-index:2;padding:6px 12px;margin:0}
+</style></head><body>
+<div class="wrap">
+  <h1>🕋 منظومة العمرة</h1><div class="st" id="net"></div>
+  <div class="off" id="offMsg">📴 مفيش إنترنت دلوقتي — افتح «آخر نسخة طوارئ» للعرض والبحث والطباعة.</div>
+  <div class="card"><b>البرنامج</b>
+    <a class="btn" id="open" href="#">🚀 فتح البرنامج</a>
+    <div class="hint" id="urlHint"></div>
+    <details><summary class="hint">⚙️ رابط البرنامج (مرة واحدة على الجهاز)</summary><input id="url" placeholder="الصق رابط البرنامج (…/exec)" dir="ltr"><button class="alt" id="saveUrl">حفظ الرابط</button></details>
+  </div>
+  <div class="card"><b>🆘 نسخة الطوارئ (بدون إنترنت)</b>
+    <button id="last">📖 فتح آخر نسخة طوارئ محفوظة على الجهاز</button>
+    <label class="btn alt" for="file">📂 استيراد ملف نسخة طوارئ (.html) وحفظه على الجهاز</label><input type="file" id="file" accept=".html,text/html" hidden>
+    <div class="hint" id="lastInfo"></div>
+  </div>
+  <div class="hint">ثبّت الصفحة كتطبيق: من قائمة المتصفح ← «تثبيت التطبيق» / «إضافة إلى الشاشة الرئيسية». ملف الطوارئ يتعمل من البرنامج: الإعدادات ← النظام والصيانة ← «🆘 نسخة طوارئ».</div>
+</div>
+<div id="view"><button id="close">✕ رجوع</button><iframe id="fr" title="نسخة الطوارئ"></iframe></div>
+<script>
+(function () {
+  var $ = function (i) { return document.getElementById(i); };
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+  function net() { var on = navigator.onLine; $('net').textContent = on ? '🟢 متصل بالإنترنت' : '🔴 بدون إنترنت'; $('offMsg').style.display = on ? 'none' : 'block'; }
+  addEventListener('online', net); addEventListener('offline', net); net();
+  var U = ''; try { U = localStorage.getItem('appUrl') || ''; } catch (e) {}
+  function urlUi() { $('url').value = U; $('urlHint').textContent = U ? '' : 'أول مرة: افتح ⚙️ وحط رابط البرنامج.'; $('open').href = U || '#'; }
+  urlUi();
+  $('saveUrl').onclick = function () { var v = $('url').value.trim(); if (!/^https:\/\//.test(v)) { alert('الرابط لازم يبدأ بـ https://'); return; } U = v; try { localStorage.setItem('appUrl', U); } catch (e) {} urlUi(); };
+  $('open').onclick = function (e) { if (!U) { e.preventDefault(); document.querySelector('details').open = true; } else if (!navigator.onLine) { e.preventDefault(); alert('مفيش إنترنت — افتح نسخة الطوارئ'); } };
+  function db(cb) { var r = indexedDB.open('umrah-dr', 1); r.onupgradeneeded = function () { r.result.createObjectStore('f'); }; r.onsuccess = function () { cb(r.result); }; r.onerror = function () { cb(null); }; }
+  function put(txt, name) { db(function (d) { if (!d) return; var t = d.transaction('f', 'readwrite'); t.objectStore('f').put({ html: txt, name: name, at: new Date().toLocaleString('ar-EG') }, 'last'); t.oncomplete = info; }); }
+  function get(cb) { db(function (d) { if (!d) return cb(null); var q = d.transaction('f').objectStore('f').get('last'); q.onsuccess = function () { cb(q.result || null); }; q.onerror = function () { cb(null); }; }); }
+  function info() { get(function (x) { $('lastInfo').textContent = x ? 'المحفوظ على الجهاز: ' + x.name + ' (اتحفظ ' + x.at + ')' : 'لا توجد نسخة محفوظة على الجهاز بعد.'; }); }
+  function show(html) { $('fr').srcdoc = html; $('view').style.display = 'block'; }
+  $('last').onclick = function () { get(function (x) { if (x) show(x.html); else alert('مفيش نسخة محفوظة — استورد ملف الطوارئ الأول'); }); };
+  $('file').onchange = function (e) { var f = e.target.files[0]; if (!f) return; var rd = new FileReader(); rd.onload = function () { var t = String(rd.result || ''); if (t.indexOf('drData') < 0) { alert('ده مش ملف نسخة طوارئ'); return; } put(t, f.name); show(t); }; rd.readAsText(f); e.target.value = ''; };
+  $('close').onclick = function () { $('view').style.display = 'none'; $('fr').srcdoc = ''; };
+  info();
+  if (!navigator.onLine) get(function (x) { if (x) show(x.html); });
+})();
+</script></body></html>
