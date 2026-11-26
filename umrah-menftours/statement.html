@@ -3,6 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;800&family=Almarai:wght@400;700;800&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 /* Layout: لوحة تحكم (قوالب · أجزاء الكشف بترتيبها · أعمدة كل جدول) + ورقة A4 بيضاء دائماً */
 :root {
@@ -88,8 +89,8 @@ textarea { min-height: 50px; resize: vertical }
 .paper .meta small { display: block; color: var(--mu); font-size: .8em }
 .paper .sec { font-family: var(--fh), Tahoma, sans-serif; font-weight: 600; color: var(--p); font-size: 1.05em; border-bottom: 1px solid var(--rule); padding-bottom: 4px }
 .paper table { width: 100%; border-collapse: collapse; table-layout: fixed }
-.paper th { background: var(--p); color: #ffffff; font-weight: 700; font-family: var(--fh), Tahoma, sans-serif; padding: 6px 5px; font-size: .9em; text-align: center; border: 1px solid var(--p); overflow-wrap: anywhere }
-.paper td { border: 1px solid var(--rule); padding: 5px 6px; vertical-align: top; overflow-wrap: anywhere }
+.paper th { background: var(--p); color: #ffffff; font-weight: 700; font-family: var(--fh), Tahoma, sans-serif; padding: 6px 5px; font-size: .9em; text-align: center; border: 1px solid var(--p); overflow-wrap: break-word }
+.paper td { border: 1px solid var(--rule); padding: 5px 6px; vertical-align: top; overflow-wrap: break-word }
 .paper td.c { text-align: center } .paper td.a { text-align: left; direction: ltr; white-space: nowrap; overflow: hidden; text-overflow: clip }
 .paper tr.h td { background: var(--pl); font-weight: 600 }
 .paper tr.h small { font-weight: 400; color: var(--mu) }
@@ -150,6 +151,8 @@ textarea { min-height: 50px; resize: vertical }
 .paper tr.k-grand td { font-family: var(--fh), Tahoma, sans-serif; background: #dbeafe; color: #1e3a8a; font-weight: 900; font-size: 1.05em; border-top: 2px solid #1e3a8a; border-bottom: 2px solid #1e3a8a }
 .paper tr.k-bal td { background: #eef2f7; border-top: 3px double #0f172a; font-family: var(--fh), Tahoma, sans-serif; font-weight: 900; font-size: 1.2em; padding: 9px 8px }
 .paper .k-sig { text-align: center; color: #94a3b8; font-size: .85em }
+.paper.cap, .paper.cap * { overflow-wrap: normal !important; word-break: normal !important; letter-spacing: 0 !important }
+@media print { body { background: #fff !important; padding: 0 !important } .top, .panel, .bar, .hint, .modal, #stBusy { display: none !important } .app { display: block !important } .paperwrap { padding: 0 !important; background: #fff !important; overflow: visible !important } .paper { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: 0 !important; padding: 0 !important } @page { size: A4; margin: 10mm } }
 .paper.wa { width: 540px; min-height: 0; padding: 0; overflow: hidden; border-radius: 18px; gap: 0 }
 .paper.wa .wh { background: var(--p); color: #ffffff; padding: 18px 20px }
 .paper.wa .wh b { font-family: var(--fh), Tahoma, sans-serif; font-weight: 800; font-size: 1.6em; display: block }
@@ -250,6 +253,7 @@ textarea { min-height: 50px; resize: vertical }
     if (gen.items.length || PAYS.some(function (p) { return p.trip === 'عام'; })) TR.push(gen);
     TR = TR.filter(function (t) { return t.items.length || PAYS.some(function (p) { return p.trip === t.key; }); });
     TR.forEach(function (t) { BYC[t.code] = t; });
+    Object.keys(GRPN).forEach(function (g) { if (!TR.some(function (t) { return t.grp === g; })) delete GRPN[g]; });
   }
   var O0 = { preset: 'current', blocks: PRESETS[1][3].blocks, cols: defCols(), look: 'classic', goDate: true, retDate: true, fb: 'Tajawal', fh: 'Cairo', acc: HD ? (HD.accKey || CLIENT) : 'C1', role: 'admin', scope: 'all', trip: TR[0] ? TR[0].code : '', grp: HD ? ((HD.groups || [])[0] || {}).id || '' : 'A', sel: {}, from: '', to: '',
     sub: true, gsub: true, codes: true, status: true, short: true, run: true, sideTrip: false, payInline: false, curs: { EGP: true, SAR: true, USD: true }, curMode: 'label',
@@ -261,7 +265,7 @@ textarea { min-height: 50px; resize: vertical }
   if (HD) { O.acc = HD.accKey || CLIENT; O.role = (H.isAdmin && H.isAdmin()) ? 'admin' : 'user'; O.scope = 'all'; O.trip = TR[0] ? TR[0].code : ''; O.sel = {}; }
   var store = function () { try { localStorage.setItem(LSK, JSON.stringify(O)); if (!HD) { localStorage.setItem('stmtStudio3.saved', JSON.stringify(SAVED)); localStorage.setItem('stmtStudio3.asg', JSON.stringify(ASG)); } } catch (e) {} };
   // القوالب العامة + القالب الافتراضي لكل حساب من قاعدة البيانات (409)
-  var tplSet = function (r) { SAVED = (r && r.tpls || []).map(function (t) { return { id: t.id, name: t.name, cfg: t.cfg || {} }; }); ASG = (r && r.assign) || {}; };
+  var tplSet = function (r) { try { if (H && H.cfgChanged) H.cfgChanged(r); } catch (eC) {} SAVED = (r && r.tpls || []).map(function (t) { return { id: t.id, name: t.name, cfg: t.cfg || {} }; }); ASG = (r && r.assign) || {}; };
   var tplLoad = function () { if (!H) return Promise.resolve(); return H.rpc('st_tpls', {}).then(function (r) { tplSet(r); applyAsg(ASG[O.acc] || ''); all(); }, function (e) { try { H.toast('⚠️ تعذّر تحميل القوالب: ' + ((e && e.message) || e)); } catch (eT) {} }); };
 
   var $ = function (i) { return document.getElementById(i); };
@@ -332,10 +336,10 @@ textarea { min-height: 50px; resize: vertical }
     var h = '<table><colgroup>' + cs.map(function (c) { return '<col' + (c.w ? ' style="width:' + c.w + '%"' : '') + '>'; }).join('') + '</colgroup><thead><tr>' + cs.map(function (c) { return '<th>' + E(c.lbl) + '</th>'; }).join('') + '</tr></thead><tbody>';
     rows.forEach(function (r) {
       if (r.t === 'h') { h += '<tr class="h"><td colspan="' + cs.length + '">' + r.html + '</td></tr>'; return; }
-      var lblDone = false, txtIx = cs.map(function (c) { return AMT[c.k] ? -1 : 1; }).indexOf(1);
+      var lblDone = false, txtIx = cs.map(function (c) { return AMT[c.k] ? -1 : 1; }).indexOf(1), atIx = r.at ? cs.map(function (c) { return c.k; }).indexOf(r.at) : -1; if (atIx >= 0) txtIx = atIx;
       h += '<tr class="' + (r.cls || '') + '">' + cs.map(function (c, i) {
         var v = r.v[c.k], cls = (AMT[c.k] ? 'a' : (c.k === 'desc' || c.k === 'trip' || c.k === 'svc' || /Desc$/.test(c.k) ? '' : 'c')) + (i === mid ? ' mid' : '');
-        if (r.t === 's' && !AMT[c.k]) { if (!lblDone && (c.k === r.at || i === txtIx)) { lblDone = true; return '<td class="' + cls + '"><b>' + r.label + '</b></td>'; } return '<td class="' + cls + '"></td>'; }
+        if (r.t === 's' && !AMT[c.k]) { if (!lblDone && i === txtIx) { lblDone = true; return '<td class="' + cls + '"><b>' + r.label + '</b></td>'; } return '<td class="' + cls + '"></td>'; }
         if (AMT[c.k]) return '<td class="' + cls + '">' + (v && typeof v === 'object' ? money(v, c.cur, r.amtCls && r.amtCls[c.k]) : (v || '')) + '</td>';
         return '<td class="' + cls + '">' + (v == null ? '' : v) + '</td>';
       }).join('') + '</tr>';
@@ -344,7 +348,7 @@ textarea { min-height: 50px; resize: vertical }
   }
 
   /* ===================== أجزاء الكشف ===================== */
-  var B = {};
+  var B = {}, sec = function (t) { return O.secT ? '<div class="sec">' + E(t) + '</div>' : ''; };
   B.brand = function (S) { var b = BR[O.brand];
     return '<div class="hd"><div class="co">' + (b ? '<b>' + E(b[0]) + '</b><span>' + E(b[1]) + '</span>' : '') + '</div><div class="doctype"><b>' + E(O.title) + '</b><span class="n">' + (HD ? E(HD.today || '') : 'ST-2611-0042 · 26/11/2026') + '</span></div></div>'; };
   B.client = function (S) { var sc = O.scope === 'trip' ? 'رحلة: ' + (S.trips[0] || {}).name : O.scope === 'grp' ? GRPN[O.grp] + ' (' + S.trips.length + ' رحلات)' : 'كل الرحلات (' + S.trips.length + ')';
@@ -370,7 +374,7 @@ textarea { min-height: 50px; resize: vertical }
     });
     flush();
     rows.push({ t: 's', cls: 'grand', label: 'إجمالي المستحق', v: { amt: S.due } });
-    return '<div class="sec">📋 المستحقات</div>' + table('grouped', S, rows);
+    return sec('المستحقات') + table('grouped', S, rows);
   };
   B.side = function (S) {
     var L = [], R = [];
@@ -380,7 +384,7 @@ textarea { min-height: 50px; resize: vertical }
     var n = Math.max(L.length, R.length), rows = [];
     for (var i = 0; i < n; i++) { var a = L[i], b = R[i]; rows.push({ cls: !a || !b ? '' : '', v: { dDate: a ? '<span class="n">' + a.d + '</span>' : '', dDesc: a ? a.desc : '', dAmt: a ? a.m : null, pAmt: b ? b.m : null, pDesc: b ? b.desc : '', pDate: b ? '<span class="n">' + b.d + '</span>' : '' }, amtCls: { pAmt: 'cr' } }); }
     rows.push({ t: 's', cls: 'grand', label: 'الإجماليات', at: 'dDesc', v: { dAmt: S.due, pAmt: S.paid } });
-    return '<div class="sec">⚖️ المستحقات والدفعات جنب بعض</div>' + table('side', S, rows);
+    return sec('المستحقات والمدفوعات') + table('side', S, rows);
   };
   B.ledger = function (S) {
     var ev = [];
@@ -392,14 +396,14 @@ textarea { min-height: 50px; resize: vertical }
       var bv = {}; Object.keys(mm).forEach(function (c) { bv[c] = bal[c]; });
       return { cls: e.k ? 'pay' : '', v: { date: '<span class="n">' + e.d + '</span>', desc: e.txt, dr: e.m || null, cr: e.c || null, bal: O.run ? bv : null }, amtCls: { dr: 'dr', cr: 'cr' } }; });
     rows.push({ t: 's', cls: 'grand', label: 'الإجمالي', v: { dr: S.due, cr: S.paid, bal: S.net } });
-    return '<div class="sec">📒 الحركات بالتاريخ</div>' + table('ledger', S, rows);
+    return sec('الحركات') + table('ledger', S, rows);
   };
   B.summary = function (S) {
     var rows = S.trips.map(function (t, i) { var rem = {}; Object.keys(t.due).forEach(function (c) { rem[c] = t.due[c] - t.paid[c]; });
       return { v: { idx: i + 1, trip: E(t.name) + (O.codes ? '<br><span class="mu" style="font-size:.85em">' + t.code + '</span>' : ''), go: '<span class="n">' + t.go + '</span>', ret: '<span class="n">' + t.ret + '</span>', n: t.n, due: t.due, paid: t.paid, rem: rem, st: chip(t.st) }, amtCls: { paid: 'cr', rem: 'dr' } }; });
     var tp = sumM(S.trips.map(function (t) { return t.paid; })), tr = {}; Object.keys(S.due).forEach(function (c) { tr[c] = S.due[c] - (tp[c] || 0); });
     rows.push({ t: 's', cls: 'grand', label: 'الإجمالي (' + S.trips.length + ' رحلة)', at: 'trip', v: { due: S.due, paid: tp, rem: tr } });
-    return '<div class="sec">🧾 الرحلات</div>' + table('summary', S, rows);
+    return sec('الرحلات') + table('summary', S, rows);
   };
   B.invoice = function (S) {
     var g = {}, ord = []; S.trips.forEach(function (t) { t.items.forEach(function (x) { var k = x.desc + '|' + x.p + '|' + x.cur; if (!g[k]) { g[k] = { desc: x.desc, p: x.p, cur: x.cur, n: 0, tr: 0 }; ord.push(k); } g[k].n += x.n; g[k].tr++; }); });
@@ -407,23 +411,23 @@ textarea { min-height: 50px; resize: vertical }
     rows.push({ t: 's', cls: 'sub', label: 'الإجمالي', v: { total: S.due } });
     rows.push({ t: 's', cls: 'pay', label: 'يخصم: المدفوع (' + S.pays.length + ' دفعة)', v: { total: S.paid }, amtCls: { total: 'cr' } });
     rows.push({ t: 's', cls: 'grand', label: 'الصافي', v: { total: S.net } });
-    return '<div class="sec">🧮 الخدمات</div>' + table('invoice', S, rows);
+    return sec('الخدمات') + table('invoice', S, rows);
   };
   B.pays = function (S) { if (!S.pays.length) return '';
     var rows = S.pays.map(function (p) { return { cls: 'pay', v: { date: '<span class="n">' + p.d + '</span>', desc: E(payTxt(p)), amt: one(p.cur, p.amt) }, amtCls: { amt: 'cr' } }; });
     rows.push({ t: 's', cls: 'sub', label: 'إجمالي الدفعات', v: { amt: S.paid } });
-    return '<div class="sec">💵 الدفعات (' + S.pays.length + ')</div>' + table('pays', S, rows); };
+    return sec('المدفوعات') + table('pays', S, rows); };
   B.timeline = function (S) {
     var ev = []; S.trips.forEach(function (t) { ev.push({ d: t.go, k: 0, t: '✈️ ' + E(t.name) + (O.retDate ? ' <span class="mu">(عودة ' + t.ret + ')</span>' : ''), s: t.items.map(function (x) { return E(x.desc) + ' ' + x.n + ' × ' + F(x.p) + ' ' + CSS_[x.cur]; }).join(' · '), m: t.due }); });
     S.pays.forEach(function (p) { ev.push({ d: p.d, k: 1, t: '💵 ' + E(payTxt(p)), s: '', m: one(p.cur, p.amt) }); });
     ev.sort(function (a, b) { return DK(a.d) - DK(b.d) || a.k - b.k; });
     var bal = {};
-    return '<div class="sec">🧭 حسابكم خطوة بخطوة</div><div class="tl">' + ev.map(function (e) { Object.keys(e.m).forEach(function (c) { add(bal, c, e.k ? -e.m[c] : e.m[c]); });
+    return sec('الحركات') + '<div class="tl">' + ev.map(function (e) { Object.keys(e.m).forEach(function (c) { add(bal, c, e.k ? -e.m[c] : e.m[c]); });
       return '<div class="e' + (e.k ? ' p' : '') + '"><span class="n">' + e.d + '</span><div><b>' + e.t + '</b>' + (e.s ? '<br><span class="mu">' + e.s + '</span>' : '') + '</div><span style="text-align:left" class="' + (e.k ? 'cr' : 'dr') + '">' + money(e.m) + '</span><span class="mu" style="text-align:left">' + (O.run ? 'الرصيد ' + money(bal) : '') + '</span></div>'; }).join('') + '</div>'; };
   B.final = function (S) { var lines = function (m) { return S.curs.map(function (c) { return '<span class="n">' + F(m[c] || 0) + '</span> <small style="display:inline">' + CS[c] + '</small>'; }).join('<br>'); };
     return '<div class="final"><div><small>إجمالي المستحق</small><b>' + lines(S.due) + '</b></div><div><small>إجمالي المدفوع</small><b>' + lines(S.paid) + '</b></div><div class="net"><small>الرصيد النهائي</small><b>' + S.curs.map(function (c) { return E(netTxt(S.net[c], c)); }).join('<br>') + '</b></div></div>'; };
   B.words = function (S) { return '<div class="words">' + S.curs.map(function (c) { var v = S.net[c];
-    return '✍️ <b>الرصيد ب' + CS[c] + ':</b> ' + (Math.abs(v) < 0.5 ? 'مسدد بالكامل — لا يوجد رصيد' : 'فقط ' + words(v) + ' ' + CURW[c] + ' لا غير — ' + (v > 0 ? 'مستحق علينا تحصيله منكم' : 'رصيد دائن لكم')); }).join('<br>') + '</div>'; };
+    return '✍️ <b>الرصيد ب' + CS[c] + ':</b> ' + (Math.abs(v) < 0.5 ? 'مسدد بالكامل — لا يوجد رصيد' : 'فقط ' + words(v) + ' ' + CURW[c] + ' لا غير — ' + (v > 0 ? 'مطلوب سداده' : 'رصيد دائن لكم')); }).join('<br>') + '</div>'; };
   B.notes = function () { return O.notes ? '<div class="notes">' + E(O.notes) + '</div>' : ''; };
   B.sign = function () { return '<div class="sign"><div>المحاسب</div><div>المدير المالي</div><div>توقيع العميل بالاستلام</div></div>'; };
   B.stamp = function (S) { var due = S.curs.some(function (c) { return S.net[c] > 0.5; }); return '<div class="stamp' + (due ? ' due' : '') + '">' + (due ? 'متبقي سداد' : 'مسدد بالكامل') + '</div>'; };
@@ -474,7 +478,7 @@ textarea { min-height: 50px; resize: vertical }
       (adm ? '<div class="row2"><input type="text" id="sName" placeholder="اسم القالب"><button type="button" class="btn" id="sSave">حفظ كقالب</button></div>' : '') + '</div></details>';
     h += '<details class="grp" data-g="scope"' + op('scope') + '><summary>النطاق والفترة</summary><div class="gbody"><div class="seg">' + [['trip', 'رحلة'], ['grp', 'مجموعة مدمجة'], ['all', 'كل الرحلات']].map(function (x) { return '<button type="button" data-scope="' + x[0] + '" class="' + (O.scope === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>' +
       (O.scope === 'trip' ? '<select id="oTrip" aria-label="الرحلة">' + TR.map(function (t) { return '<option value="' + t.code + '"' + (t.code === O.trip ? ' selected' : '') + '>' + E(t.name) + '</option>'; }).join('') + '</select>' : '') +
-      (O.scope === 'grp' ? '<select id="oGrp" aria-label="المجموعة"><option value="A"' + (O.grp === 'A' ? ' selected' : '') + '>' + GRPN.A + ' (6 رحلات)</option><option value="B"' + (O.grp === 'B' ? ' selected' : '') + '>' + GRPN.B + ' (5 رحلات)</option></select>' : '') +
+      (O.scope === 'grp' ? (Object.keys(GRPN).length ? '<select id="oGrp" aria-label="المجموعة">' + Object.keys(GRPN).map(function (g) { var nT = TR.filter(function (t) { return t.grp === g; }).length; return '<option value="' + E(g) + '"' + (O.grp === g ? ' selected' : '') + '>' + E(GRPN[g]) + ' (' + nT + ' رحلات)</option>'; }).join('') + '</select>' : '<span class="hint">الحساب ده مفيهوش رحلات مدمجة.</span>') : '') +
       (O.scope === 'all' ? '<div class="trips">' + TR.map(function (t) { return '<label class="ck"><input type="checkbox" data-sel="' + t.code + '"' + (O.sel[t.code] !== false ? ' checked' : '') + '> ' + E(t.name) + '</label>'; }).join('') + '</div>' : '') +
       '<div class="row2"><label class="f" for="oFrom">من تاريخ<input type="text" id="oFrom" placeholder="DD/MM/YYYY" value="' + E(O.from) + '"></label><label class="f" for="oTo">إلى تاريخ<input type="text" id="oTo" placeholder="DD/MM/YYYY" value="' + E(O.to) + '"></label></div></div></details>';
     h += '<details class="grp" data-g="cur"' + op('cur') + '><summary>العملات</summary><div class="gbody"><div class="seg">' + CORDER.map(function (c) { return '<label class="ck"><input type="checkbox" data-cur="' + c + '"' + (O.curs[c] !== false ? ' checked' : '') + '> ' + CS[c] + '</label>'; }).join('') + '</div>' +
@@ -484,7 +488,7 @@ textarea { min-height: 50px; resize: vertical }
         return '<div class="blk' + (b.on ? '' : ' off') + '"><div class="h"><label><input type="checkbox" data-bon="' + i + '"' + (b.on ? ' checked' : '') + '> ' + BLK[b.k] + '</label>' + (hasCols ? '<button type="button" class="mini" data-bcol="' + b.k + '" aria-label="الأعمدة">⚙️</button>' : '') +
           '<button type="button" class="mini" data-bmv="' + i + '|-1"' + (i ? '' : ' disabled') + ' aria-label="لأعلى">▲</button><button type="button" class="mini" data-bmv="' + i + '|1"' + (i < O.blocks.length - 1 ? '' : ' disabled') + ' aria-label="لأسفل">▼</button></div>' +
           (hasCols && O.open['col_' + b.k] ? colEditor(b.k) : '') + '</div>'; }).join('') + '</div></details>';
-    h += '<details class="grp" data-g="opt"' + op('opt') + '><summary>خيارات المحتوى</summary><div class="gbody">' + ck('sub', 'إجمالي لكل رحلة') + ck('gsub', 'إجمالي فرعي لكل مجموعة دمج') + ck('payInline', 'المسدد تحت كل رحلة (المُجمّع)') + ck('sideTrip', 'سطر واحد لكل رحلة (جنب بعض والدفتر)') + ck('codes', 'كود الرحلة') + ck('goDate', 'تاريخ السفر لكل رحلة') + ck('retDate', 'تاريخ العودة لكل رحلة') + ck('status', 'حالة كل رحلة') + ck('run', 'الرصيد المتحرك') + ck('short', 'اختصار بيان التحويلات') + '</div></details>';
+    h += '<details class="grp" data-g="opt"' + op('opt') + '><summary>خيارات المحتوى</summary><div class="gbody">' + ck('sub', 'إجمالي لكل رحلة') + ck('gsub', 'إجمالي فرعي لكل مجموعة دمج') + ck('payInline', 'المسدد تحت كل رحلة (المُجمّع)') + ck('sideTrip', 'سطر واحد لكل رحلة (جنب بعض والدفتر)') + ck('secT', 'عناوين الأقسام فوق الجداول') + ck('codes', 'كود الرحلة') + ck('goDate', 'تاريخ السفر لكل رحلة') + ck('retDate', 'تاريخ العودة لكل رحلة') + ck('status', 'حالة كل رحلة') + ck('run', 'الرصيد المتحرك') + ck('short', 'اختصار بيان التحويلات') + '</div></details>';
     h += '<details class="grp" data-g="look"' + op('look') + '><summary>الشكل</summary><div class="gbody"><div class="row2"><label class="f" for="oBrand">الشركة<select id="oBrand"><option value="menf"' + (O.brand === 'menf' ? ' selected' : '') + '>منف</option><option value="eht"' + (O.brand === 'eht' ? ' selected' : '') + '>إيجيبشان</option><option value="none"' + (O.brand === 'none' ? ' selected' : '') + '>بدون بيانات شركة</option></select></label>' +
       '<label class="f" for="oLook">النمط<select id="oLook">' + [['classic', 'الكشف الحالي'], ['formal', 'رسمي بجداول'], ['modern', 'عصري'], ['minimal', 'بسيط بخطوط'], ['band', 'رأس ملوّن'], ['wa', 'بطاقة واتساب']].map(function (x) { return '<option value="' + x[0] + '"' + (O.look === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label></div>' +
       '<div class="row2"><label class="f" for="oTitle">عنوان الكشف<input type="text" id="oTitle" value="' + E(O.title) + '"></label><label class="f" for="oFs">حجم الخط<select id="oFs"><option value="s"' + (O.fs === 's' ? ' selected' : '') + '>صغير</option><option value="m"' + (O.fs === 'm' ? ' selected' : '') + '>متوسط</option><option value="l"' + (O.fs === 'l' ? ' selected' : '') + '>كبير</option></select></label></div>' +
@@ -531,7 +535,7 @@ textarea { min-height: 50px; resize: vertical }
       if (H) { H.rpc('st_tpl_delete', { p_id: sd.id || sd.name }).then(function (r) { tplSet(r); all(); }, function (e) { H.toast('❌ ' + ((e && e.message) || e)); }); return; }
       SAVED.splice(+ds.del, 1); Object.keys(ASG).forEach(function (a) { if (ASG[a] === 'sv:' + nm) delete ASG[a]; }); return all(); }
     if (b.id === 'sSave') { var n = ($('sName').value || '').trim(); if (!n) { $('sName').focus(); return; }
-      var cfg = {}; ['blocks', 'cols', 'look', 'sub', 'gsub', 'codes', 'status', 'short', 'run', 'sideTrip', 'payInline', 'curs', 'curMode', 'brand', 'pal', 'fs', 'land', 'notes', 'title', 'goDate', 'retDate', 'fb', 'fh'].forEach(function (kk) { cfg[kk] = JSON.parse(JSON.stringify(O[kk])); });
+      var cfg = {}; ['blocks', 'cols', 'look', 'sub', 'gsub', 'codes', 'status', 'short', 'run', 'sideTrip', 'payInline', 'curs', 'curMode', 'brand', 'pal', 'fs', 'land', 'notes', 'title', 'goDate', 'retDate', 'fb', 'fh', 'secT'].forEach(function (kk) { cfg[kk] = JSON.parse(JSON.stringify(O[kk])); });
       if (H) { var ex = SAVED.filter(function (s) { return s.name === n; })[0], id = (ex && ex.id) || ('t' + Date.now().toString(36));
         H.rpc('st_tpl_save', { p: { id: id, name: n, cfg: cfg } }).then(function (r) { tplSet(r); $('sName') && ($('sName').value = ''); H.toast('✅ اتحفظ القالب «' + n + '» لكل المستخدمين'); all(); }, function (e) { H.toast('❌ ' + ((e && e.message) || e)); }); return; }
       SAVED = SAVED.filter(function (s) { return s.name !== n; }).concat([{ id: n, name: n, cfg: cfg }]); return all(); }
@@ -561,8 +565,30 @@ textarea { min-height: 50px; resize: vertical }
   }
   function docHtml() { var d = $('doc'); if (!d) return ''; var css = ''; document.querySelectorAll('style').forEach(function (st) { css += st.textContent; });
     return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>' + E('كشف حساب — ' + CLIENT) + '</title><link rel="stylesheet" href="' + (document.querySelector('link[href*="fonts.googleapis.com/css2"]') || {}).href + '"><style>' + css + '\nbody{background:#fff;padding:0}.paper{box-shadow:none;margin:0;width:auto;min-height:0}@page{size:A4;margin:10mm}</style></head><body>' + d.outerHTML + '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script></body></html>'; }
-  function exportX(k) {
+  function capture(scale) { var d = $('doc'); if (!d || typeof html2canvas !== 'function') return Promise.reject(new Error('مكتبة الصور لم تُحمَّل'));
+    d.classList.add('cap'); var fr = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    return fr.then(function () { return html2canvas(d, { scale: scale, backgroundColor: '#ffffff', useCORS: true }); }).then(function (cv) { d.classList.remove('cap'); return cv; }, function (e) { d.classList.remove('cap'); throw e; }); }
+  var fname = function (ext) { return 'كشف حساب - ' + CLIENT + (O.scope === 'trip' && BYC[O.trip] ? ' - ' + BYC[O.trip].name : '') + ' - ' + new Date().toLocaleDateString('en-GB').replace(/\//g, '-') + '.' + ext; };
+  var dl = function (blob, name) { if (H && H.save) { try { H.save(blob, name); return; } catch (eS) {} } var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(a.href); }, 8000); };
+  function busy(on, t) { var b = $('stBusy'); if (!b) { b = document.createElement('div'); b.id = 'stBusy'; b.style.cssText = 'position:fixed;inset:0;background:rgba(10,18,15,.55);color:#fff;display:flex;align-items:center;justify-content:center;font:700 16px var(--ui);z-index:50'; document.body.appendChild(b); } b.textContent = t || '⏳ جاري التجهيز…'; b.style.display = on ? 'flex' : 'none'; }
+  function exportX(k, auto) {
+    var fin = function () { busy(false); if (auto && H) setTimeout(function () { H.close(); }, 300); };
     if (k === 'close') { if (H) H.close(); return; }
+    if (O.look === 'classic' && H) { H.printCurrent(O.scope, O.scope === 'trip' && BYC[O.trip] ? BYC[O.trip].key : null, k === 'png' ? 'image' : k === 'pdf' ? 'pdf' : undefined); if (auto) H.close(); return; }
+    if (k === 'png') { busy(true, '⏳ جاري تجهيز صورة 4K…');
+      capture(Math.min(3840 / $('doc').offsetWidth, 5)).then(function (cv) { cv.toBlob(function (bl) { dl(bl, fname('png')); if (H) H.toast('✅ اتنزلت الصورة (' + cv.width + '×' + cv.height + ')'); fin(); }, 'image/png'); }, function (e) { busy(false); if (H) H.toast('❌ ' + e.message); }); return; }
+    if (k === 'pdf') { if (!window.jspdf) { if (H) H.toast('❌ مكتبة PDF لم تُحمَّل'); return; } busy(true, '⏳ جاري تجهيز PDF…');
+      capture(3).then(function (cv) {
+        var land = O.land && O.look !== 'wa', pdf = new window.jspdf.jsPDF({ orientation: land ? 'l' : 'p', unit: 'mm', format: 'a4', compress: true });
+        var W = land ? 297 : 210, Hh = land ? 210 : 297, m = 8, iw = W - 2 * m, ih = Hh - 2 * m, pxPerMm = cv.width / iw, pageH = Math.floor(ih * pxPerMm), y = 0, first = true;
+        while (y < cv.height) { var h = Math.min(pageH, cv.height - y), c2 = document.createElement('canvas'); c2.width = cv.width; c2.height = h; var g = c2.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c2.width, h); g.drawImage(cv, 0, y, cv.width, h, 0, 0, cv.width, h);
+          if (!first) pdf.addPage(); first = false; pdf.addImage(c2.toDataURL('image/jpeg', 0.92), 'JPEG', m, m, iw, h / pxPerMm); y += h; }
+        var bl = pdf.output('blob'), nm = fname('pdf');
+        var f = (typeof File === 'function') ? new File([bl], nm, { type: 'application/pdf' }) : null;
+        if (!auto && f && navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: nm }).catch(function () { dl(bl, nm); }); } else dl(bl, nm);
+        if (H) H.toast('✅ اتجهز ملف PDF'); fin();
+      }, function (e) { busy(false); if (H) H.toast('❌ ' + e.message); }); return; }
+    if (H) { var done = false, after = function () { if (done) return; done = true; window.removeEventListener('afterprint', after); fin(); }; window.addEventListener('afterprint', after); (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function () { setTimeout(function () { window.print(); if (!auto) after(); }, 150); }); return; }
     if (O.look === 'classic' && H) { H.printCurrent(O.scope, O.scope === 'trip' && BYC[O.trip] ? BYC[O.trip].key : null, k === 'png' ? 'image' : k === 'pdf' ? 'pdf' : undefined); return; }
     if (k === 'png') { var d = $('doc'); if (!d || typeof html2canvas !== 'function') return; if (H) H.toast('⏳ جاري تجهيز الصورة…');
       html2canvas(d, { scale: Math.min(3840 / d.offsetWidth, 5), backgroundColor: '#ffffff' }).then(function (cv) { var a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = 'كشف حساب - ' + CLIENT + ' - ' + new Date().toLocaleDateString('en-GB').replace(/\//g, '-') + '.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); if (H) H.toast('✅ اتنزلت الصورة (' + cv.width + '×' + cv.height + ')'); }); return; }
@@ -575,6 +601,16 @@ textarea { min-height: 50px; resize: vertical }
   $('mClose').addEventListener('click', function () { $('modal').hidden = true; });
   $('modal').addEventListener('click', function (e) { if (e.target === $('modal')) $('modal').hidden = true; });
   all();
-  if (H) tplLoad();
+  if (H) tplLoad().then(function () {
+    var A = null; try { A = H.auto ? H.auto() : null; } catch (eA) { A = null; }
+    if (!A) return;
+    // (V4.720) طباعة/PDF/صورة من شاشة الحساب ⇒ القالب المحدد للحساب يُطبَّق تلقائياً بنفس نطاق الزر
+    if (A.tpl) applyAsg(A.tpl);
+    O.sel = {};
+    if (A.scope === 'trip' && A.trip) { var tt = TR.filter(function (t) { return t.key === A.trip; })[0]; if (tt) { O.scope = 'trip'; O.trip = tt.code; } }
+    else { O.scope = 'all'; if (Array.isArray(A.filter)) { var keep = {}; A.filter.forEach(function (k) { keep[k] = 1; }); TR.forEach(function (t) { if (!keep[t.key]) O.sel[t.code] = false; }); } }
+    all(); busy(true, '⏳ جاري تجهيز الكشف بقالب «' + asgLabel(A.tpl || '') + '»…');
+    setTimeout(function () { exportX(A.mode === 'image' ? 'png' : A.mode === 'pdf' ? 'pdf' : 'print', true); }, 400);
+  });
 })();
 </script>
