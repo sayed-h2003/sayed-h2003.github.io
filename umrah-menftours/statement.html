@@ -255,7 +255,7 @@ textarea { min-height: 50px; resize: vertical }
     TR.forEach(function (t) { BYC[t.code] = t; });
     Object.keys(GRPN).forEach(function (g) { if (!TR.some(function (t) { return t.grp === g; })) delete GRPN[g]; });
   }
-  var O0 = { preset: 'current', blocks: PRESETS[1][3].blocks, cols: defCols(), look: 'classic', goDate: true, retDate: true, fb: 'Tajawal', fh: 'Cairo', acc: HD ? (HD.accKey || CLIENT) : 'C1', role: 'admin', scope: 'all', trip: TR[0] ? TR[0].code : '', grp: HD ? ((HD.groups || [])[0] || {}).id || '' : 'A', sel: {}, from: '', to: '',
+  var O0 = { preset: 'current', blocks: PRESETS[1][3].blocks, cols: defCols(), look: 'classic', goDate: true, retDate: true, secT: false, editId: '', fb: 'Tajawal', fh: 'Cairo', acc: HD ? (HD.accKey || CLIENT) : 'C1', role: 'admin', scope: 'all', trip: TR[0] ? TR[0].code : '', grp: HD ? ((HD.groups || [])[0] || {}).id || '' : 'A', sel: {}, from: '', to: '',
     sub: true, gsub: true, codes: true, status: true, short: true, run: true, sideTrip: false, payInline: false, curs: { EGP: true, SAR: true, USD: true }, curMode: 'label',
     brand: 'menf', pal: 'green', fs: 'm', land: false, notes: 'الأسعار شاملة الرسوم الحكومية. أي استفسار عن الحساب: 01098886588', title: 'كشف حساب', open: { acc: true, tpl: true } };
   var O = JSON.parse(JSON.stringify(O0)), SAVED = [], ASG = {};
@@ -322,9 +322,9 @@ textarea { min-height: 50px; resize: vertical }
 
   /* ===================== محرك الجداول (أعمدة مرتبة + عرض + عملات) ===================== */
   function rcols(type, S) {
-    var multi = O.curMode === 'cols' && S.curs.length > 1, out = [];
+    var multi = O.curMode === 'cols' && S.curs.length >= 1, out = [];
     (O.cols[type] || []).forEach(function (c) { if (!c.on || (c.k === 'go' && !O.goDate) || (c.k === 'ret' && !O.retDate)) return; var d = COLDEF[type].filter(function (x) { return x[0] === c.k; })[0]; if (!d) return;
-      if (AMT[c.k] && multi) S.curs.forEach(function (cu) { out.push({ k: c.k, lbl: d[1] + ' ' + CS[cu], w: c.w ? Math.max(c.w * 0.72, 8) : 0, cur: cu }); });
+      if (AMT[c.k] && multi) S.curs.forEach(function (cu) { out.push({ k: c.k, lbl: d[1] + ' ' + CS[cu], w: c.w ? (S.curs.length > 1 ? Math.max(c.w * 0.72, 8) : c.w) : 0, cur: cu }); });
       else out.push({ k: c.k, lbl: d[1], w: c.w, cur: null }); });
     return out;
   }
@@ -474,8 +474,9 @@ textarea { min-height: 50px; resize: vertical }
         : '<div class="hint">القالب الافتراضي: <b>' + E(asgName) + '</b><br>🔒 تغيير القالب الافتراضي للأدمن بس. تقدر تعاين أي قالب تاني مؤقتاً من غير ما يتحفظ.</div>') +
       '<button type="button" class="mini" id="bReset" style="padding:5px 8px">↺ ارجع للقالب الافتراضي للحساب</button></div></details>';
     h += '<details class="grp" data-g="tpl"' + op('tpl') + '><summary>القوالب</summary><div class="gbody"><div class="tpls">' + PRESETS.map(function (p) { return '<button type="button" data-pre="' + p[0] + '" class="' + (O.preset === p[0] ? 'on' : '') + '">' + p[1] + '<small>' + p[2] + '</small></button>'; }).join('') + '</div>' +
-      '<b style="font-size:12.5px">قوالب محفوظة (عامة لكل المستخدمين)</b><div class="saved">' + (SAVED.length ? SAVED.map(function (x, i) { return '<div class="s"><button type="button" class="mini nm" data-load="' + i + '">' + E(x.name) + '</button>' + (adm ? '<button type="button" class="mini" data-del="' + i + '" aria-label="حذف القالب">✕</button>' : '') + '</div>'; }).join('') : '<span class="hint">لسه مفيش.' + (adm ? ' خصّص الكشف واحفظه باسم.' : '') + '</span>') + '</div>' +
-      (adm ? '<div class="row2"><input type="text" id="sName" placeholder="اسم القالب"><button type="button" class="btn" id="sSave">حفظ كقالب</button></div>' : '') + '</div></details>';
+      '<b style="font-size:12.5px">قوالب محفوظة (عامة لكل المستخدمين)</b><div class="saved">' + (SAVED.length ? SAVED.map(function (x, i) { return '<div class="s"><button type="button" class="mini nm' + (O.editId && O.editId === x.id ? ' on' : '') + '" data-load="' + i + '" title="فتح القالب للمعاينة أو التعديل">' + (O.editId && O.editId === x.id ? '✏️ ' : '') + E(x.name) + '</button>' + (adm ? '<button type="button" class="mini" data-del="' + i + '" aria-label="حذف القالب">✕</button>' : '') + '</div>'; }).join('') : '<span class="hint">لسه مفيش.' + (adm ? ' خصّص الكشف واحفظه باسم.' : '') + '</span>') + '</div>' +
+      (adm && O.editId && SAVED.some(function (x) { return x.id === O.editId; }) ? '<div class="blk" style="background:var(--chip)"><span style="font-size:12.5px">✏️ بتعدّل قالب «<b>' + E((SAVED.filter(function (x) { return x.id === O.editId; })[0] || {}).name) + '</b>» — أي تغيير في اللوحة بيتطبق عليه لما تحفظ</span><div class="row2"><button type="button" class="btn" id="sUpd">💾 حفظ التعديلات</button><button type="button" class="btn ghost" id="sNew">إنهاء التعديل</button></div></div>' : '') +
+      (adm ? '<div class="row2"><input type="text" id="sName" placeholder="اسم قالب جديد"><button type="button" class="btn" id="sSave">حفظ كقالب جديد</button></div><span class="hint">لتعديل قالب محفوظ: اضغط اسمه، غيّر اللي عايزه، واضغط «حفظ التعديلات».</span>' : '') + '</div></details>';
     h += '<details class="grp" data-g="scope"' + op('scope') + '><summary>النطاق والفترة</summary><div class="gbody"><div class="seg">' + [['trip', 'رحلة'], ['grp', 'مجموعة مدمجة'], ['all', 'كل الرحلات']].map(function (x) { return '<button type="button" data-scope="' + x[0] + '" class="' + (O.scope === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>' +
       (O.scope === 'trip' ? '<select id="oTrip" aria-label="الرحلة">' + TR.map(function (t) { return '<option value="' + t.code + '"' + (t.code === O.trip ? ' selected' : '') + '>' + E(t.name) + '</option>'; }).join('') + '</select>' : '') +
       (O.scope === 'grp' ? (Object.keys(GRPN).length ? '<select id="oGrp" aria-label="المجموعة">' + Object.keys(GRPN).map(function (g) { var nT = TR.filter(function (t) { return t.grp === g; }).length; return '<option value="' + E(g) + '"' + (O.grp === g ? ' selected' : '') + '>' + E(GRPN[g]) + ' (' + nT + ' رحلات)</option>'; }).join('') + '</select>' : '<span class="hint">الحساب ده مفيهوش رحلات مدمجة.</span>') : '') +
@@ -521,7 +522,7 @@ textarea { min-height: 50px; resize: vertical }
   P_.addEventListener('toggle', function (e) { var d = e.target; if (d.dataset && d.dataset.g) { O.open[d.dataset.g] = d.open; store(); } }, true);
   P_.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return; var ds = b.dataset;
-    if (ds.pre) { applyPreset(ds.pre); return all(); }
+    if (ds.pre) { applyPreset(ds.pre); O.editId = ''; return all(); }
     if (ds.scope) { O.scope = ds.scope; return all(); }
     if (ds.cm) { O.curMode = ds.cm; return all(); }
     if (ds.pal) { O.pal = ds.pal; return all(); }
@@ -530,14 +531,16 @@ textarea { min-height: 50px; resize: vertical }
     if (ds.bmv) { var a = ds.bmv.split('|'), i = +a[0], j = i + +a[1]; var x = O.blocks.splice(i, 1)[0]; O.blocks.splice(j, 0, x); O.preset = ''; return all(); }
     if (ds.bcol) { O.open['col_' + ds.bcol] = !O.open['col_' + ds.bcol]; return all(); }
     if (ds.cmv) { var q = ds.cmv.split('|'), cs = O.cols[q[0]], k = +q[1], m = k + +q[2]; var y = cs.splice(k, 1)[0]; cs.splice(m, 0, y); return all(); }
-    if (ds.load) { var s = SAVED[+ds.load]; if (s) { loadCfg(s.cfg); O.preset = ''; } return all(); }
+    if (ds.load) { var s = SAVED[+ds.load]; if (s) { loadCfg(s.cfg); O.preset = ''; O.editId = s.id || ''; } return all(); }
+    if (b.id === 'sNew') { O.editId = ''; return all(); }
     if (ds.del) { var sd = SAVED[+ds.del], nm = sd.name; if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'تأكيد؟'; return; }
       if (H) { H.rpc('st_tpl_delete', { p_id: sd.id || sd.name }).then(function (r) { tplSet(r); all(); }, function (e) { H.toast('❌ ' + ((e && e.message) || e)); }); return; }
       SAVED.splice(+ds.del, 1); Object.keys(ASG).forEach(function (a) { if (ASG[a] === 'sv:' + nm) delete ASG[a]; }); return all(); }
-    if (b.id === 'sSave') { var n = ($('sName').value || '').trim(); if (!n) { $('sName').focus(); return; }
-      var cfg = {}; ['blocks', 'cols', 'look', 'sub', 'gsub', 'codes', 'status', 'short', 'run', 'sideTrip', 'payInline', 'curs', 'curMode', 'brand', 'pal', 'fs', 'land', 'notes', 'title', 'goDate', 'retDate', 'fb', 'fh', 'secT'].forEach(function (kk) { cfg[kk] = JSON.parse(JSON.stringify(O[kk])); });
-      if (H) { var ex = SAVED.filter(function (s) { return s.name === n; })[0], id = (ex && ex.id) || ('t' + Date.now().toString(36));
-        H.rpc('st_tpl_save', { p: { id: id, name: n, cfg: cfg } }).then(function (r) { tplSet(r); $('sName') && ($('sName').value = ''); H.toast('✅ اتحفظ القالب «' + n + '» لكل المستخدمين'); all(); }, function (e) { H.toast('❌ ' + ((e && e.message) || e)); }); return; }
+    if (b.id === 'sSave' || b.id === 'sUpd') { var upd = b.id === 'sUpd', cur0 = upd ? SAVED.filter(function (x) { return x.id === O.editId; })[0] : null, n = upd ? (cur0 && cur0.name) : ($('sName').value || '').trim(); if (!n) { if ($('sName')) $('sName').focus(); return; }
+      var cfg = {}; ['blocks', 'cols', 'look', 'sub', 'gsub', 'codes', 'status', 'short', 'run', 'sideTrip', 'payInline', 'curs', 'curMode', 'brand', 'pal', 'fs', 'land', 'notes', 'title', 'goDate', 'retDate', 'fb', 'fh', 'secT'].forEach(function (kk) { if (O[kk] !== undefined) cfg[kk] = JSON.parse(JSON.stringify(O[kk])); });
+      if (H) { var ex = upd ? cur0 : SAVED.filter(function (s) { return s.name === n; })[0], id = (ex && ex.id) || ('t' + Date.now().toString(36));
+        b.disabled = true; b.textContent = '⏳ جاري الحفظ…';
+        H.rpc('st_tpl_save', { p: { id: id, name: n, cfg: cfg } }).then(function (r) { tplSet(r); O.editId = id; H.toast('✅ اتحفظ القالب «' + n + '» لكل المستخدمين'); all(); }, function (e) { b.disabled = false; b.textContent = upd ? '💾 حفظ التعديلات' : 'حفظ كقالب جديد'; alert('❌ ما اتحفظش القالب: ' + ((e && e.message) || e)); }); return; }
       SAVED = SAVED.filter(function (s) { return s.name !== n; }).concat([{ id: n, name: n, cfg: cfg }]); return all(); }
     if (b.id === 'b4k') return shot();
   });
