@@ -346,7 +346,7 @@ textarea { min-height: 50px; resize: vertical }
   /* ===================== أجزاء الكشف ===================== */
   var B = {};
   B.brand = function (S) { var b = BR[O.brand];
-    return '<div class="hd"><div class="co">' + (b ? '<b>' + E(b[0]) + '</b><span>' + E(b[1]) + '</span>' : '') + '</div><div class="doctype"><b>' + E(O.title) + '</b><span class="n">ST-2611-0042 · 26/11/2026</span></div></div>'; };
+    return '<div class="hd"><div class="co">' + (b ? '<b>' + E(b[0]) + '</b><span>' + E(b[1]) + '</span>' : '') + '</div><div class="doctype"><b>' + E(O.title) + '</b><span class="n">' + (HD ? E(HD.today || '') : 'ST-2611-0042 · 26/11/2026') + '</span></div></div>'; };
   B.client = function (S) { var sc = O.scope === 'trip' ? 'رحلة: ' + (S.trips[0] || {}).name : O.scope === 'grp' ? GRPN[O.grp] + ' (' + S.trips.length + ' رحلات)' : 'كل الرحلات (' + S.trips.length + ')';
     return '<div class="client"><div><small>كشف حساب السادة</small><b>' + E(CLIENT) + '</b></div><span class="tag">' + E(sc) + '</span></div>'; };
   B.meta = function (S) { var first = S.trips.reduce(function (m, t) { return !m || DK(t.go) < DK(m) ? t.go : m; }, '');
@@ -398,7 +398,7 @@ textarea { min-height: 50px; resize: vertical }
     var rows = S.trips.map(function (t, i) { var rem = {}; Object.keys(t.due).forEach(function (c) { rem[c] = t.due[c] - t.paid[c]; });
       return { v: { idx: i + 1, trip: E(t.name) + (O.codes ? '<br><span class="mu" style="font-size:.85em">' + t.code + '</span>' : ''), go: '<span class="n">' + t.go + '</span>', ret: '<span class="n">' + t.ret + '</span>', n: t.n, due: t.due, paid: t.paid, rem: rem, st: chip(t.st) }, amtCls: { paid: 'cr', rem: 'dr' } }; });
     var tp = sumM(S.trips.map(function (t) { return t.paid; })), tr = {}; Object.keys(S.due).forEach(function (c) { tr[c] = S.due[c] - (tp[c] || 0); });
-    rows.push({ t: 's', cls: 'grand', label: 'الإجمالي (' + S.trips.length + ' رحلة)', v: { due: S.due, paid: tp, rem: tr } });
+    rows.push({ t: 's', cls: 'grand', label: 'الإجمالي (' + S.trips.length + ' رحلة)', at: 'trip', v: { due: S.due, paid: tp, rem: tr } });
     return '<div class="sec">🧾 الرحلات</div>' + table('summary', S, rows);
   };
   B.invoice = function (S) {
