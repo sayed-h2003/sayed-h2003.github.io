@@ -1,0 +1,580 @@
+<title>استوديو كشوف الحساب</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;800&family=Almarai:wght@400;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* Layout: لوحة تحكم (قوالب · أجزاء الكشف بترتيبها · أعمدة كل جدول) + ورقة A4 بيضاء دائماً */
+:root {
+  --bg: #eef1ef; --panel: #ffffff; --fg: #17231e; --mut: #5e6d66; --line: #d5ded9; --accent: #0d5e51; --accent-ink: #ffffff; --chip: #e3eeea;
+  --ui: 'Readex Pro', 'IBM Plex Sans Arabic', Tahoma, sans-serif; --doc: 'IBM Plex Sans Arabic', 'Readex Pro', Tahoma, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #121815; --panel: #1b2420; --fg: #e5ece8; --mut: #9aaba3; --line: #2d3a34; --accent: #3fb59d; --accent-ink: #062019; --chip: #24322c; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #121815; --panel: #1b2420; --fg: #e5ece8; --mut: #9aaba3; --line: #2d3a34; --accent: #3fb59d; --accent-ink: #062019; --chip: #24322c; color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--fg); font-family: var(--ui); direction: rtl; padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+h1 { font-size: 20px; margin: 0; text-wrap: balance }
+.top { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 12px }
+.top p { margin: 0; color: var(--mut); font-size: 13px; flex: 1 1 320px }
+.badge { background: var(--chip); color: var(--accent); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600 }
+.app { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; align-items: start }
+@media (max-width: 980px) { .app { grid-template-columns: minmax(0, 1fr) } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); max-height: calc(100vh - 24px); overflow: auto }
+@media (max-width: 980px) { .panel { position: static; max-height: none } }
+details.grp { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px }
+details.grp > summary { cursor: pointer; font-weight: 600; color: var(--accent); font-size: 13.5px; list-style-position: inside }
+details.grp[open] > summary { margin-bottom: 8px }
+.gbody { display: flex; flex-direction: column; gap: 7px }
+.tpls { display: grid; grid-template-columns: 1fr 1fr; gap: 6px }
+.tpls button, .seg button, .mini { font: inherit; font-size: 12.5px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 8px; padding: 6px 8px; cursor: pointer; text-align: right; line-height: 1.35 }
+.tpls button small { display: block; color: var(--mut); font-size: 11px }
+.tpls button.on, .seg button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.tpls button.on small { color: var(--accent-ink); opacity: .85 }
+.seg { display: flex; flex-wrap: wrap; gap: 4px }
+.seg button { padding: 5px 10px; text-align: center }
+.mini { padding: 1px 7px; text-align: center; font-size: 12px }
+.mini:disabled { opacity: .35; cursor: default }
+label.ck { display: flex; gap: 6px; align-items: flex-start; font-size: 12.5px; cursor: pointer }
+label.ck input { margin-top: 3px; accent-color: var(--accent) }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px }
+.f { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--mut); min-width: 0 }
+input[type=text], input[type=number], select, textarea { font: inherit; font-size: 13px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; min-width: 0; width: 100% }
+textarea { min-height: 50px; resize: vertical }
+.blk { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 8px; padding: 5px 7px; gap: 5px }
+.blk .h { display: flex; align-items: center; gap: 5px; font-size: 12.5px }
+.blk .h label { flex: 1; display: flex; gap: 6px; align-items: center; cursor: pointer }
+.blk.off { opacity: .6 }
+.cols { display: flex; flex-direction: column; gap: 3px; background: var(--chip); border-radius: 6px; padding: 5px }
+.cols .c { display: grid; grid-template-columns: 18px minmax(0, 1fr) 56px 26px 26px; gap: 4px; align-items: center; font-size: 12px }
+.cols .c input[type=number] { padding: 2px 4px; font-size: 12px }
+.trips { max-height: 150px; overflow: auto; display: flex; flex-direction: column; gap: 3px; border: 1px solid var(--line); border-radius: 8px; padding: 6px }
+.sw { display: flex; gap: 6px; flex-wrap: wrap }
+.sw button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer }
+.sw button.on { outline: 3px solid var(--accent); outline-offset: 1px }
+.btn { font: inherit; font-weight: 600; font-size: 13px; border: 0; border-radius: 9px; padding: 8px 12px; background: var(--accent); color: var(--accent-ink); cursor: pointer }
+.btn.ghost { background: var(--chip); color: var(--accent) }
+.saved { display: flex; flex-direction: column; gap: 4px }
+.saved .s { display: flex; gap: 6px; align-items: center; font-size: 12.5px }
+.saved .s button.nm { flex: 1; text-align: right }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.stage { min-width: 0; display: flex; flex-direction: column; gap: 10px }
+.bar { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; font-size: 12.5px; color: var(--mut) }
+.bar b { color: var(--fg) }
+.paperwrap { overflow-x: auto; background: var(--chip); border-radius: 12px; padding: 16px }
+.hint { font-size: 11.5px; color: var(--mut) }
+.modal { position: fixed; inset: 0; background: rgba(10, 18, 15, .72); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 20 }
+.modal .box { background: var(--panel); border-radius: 12px; padding: 12px; max-width: min(900px, 100%); max-height: 92vh; overflow: auto; display: flex; flex-direction: column; gap: 8px }
+.modal img { width: 100%; border: 1px solid var(--line); border-radius: 6px }
+
+/* ===== الورقة: مستند بألوان ثابتة ===== */
+.paper { --p: #0d5e51; --p2: #b8913a; --pl: #e7f2ee; --ink: #16201c; --soft: #f6f8f7; --rule: #d9e2de; --dr: #b42318; --cr: #15803d; --mu: #5b6863;
+  width: 794px; min-height: 1123px; margin: 0 auto; background: #ffffff; color: var(--ink); font-family: var(--fb), Tahoma, sans-serif; font-size: 12.5px; padding: 32px 36px; box-shadow: 0 6px 24px rgba(0, 0, 0, .18); display: flex; flex-direction: column; gap: 13px; direction: rtl; font-variant-numeric: tabular-nums }
+.paper.land { width: 1123px; min-height: 794px }
+.paper.fs-s { font-size: 11.3px } .paper.fs-l { font-size: 13.8px }
+.paper .n { direction: ltr; unicode-bidi: isolate; white-space: nowrap }
+.paper .dr { color: var(--dr) } .paper .cr { color: var(--cr) } .paper .mu { color: var(--mu) }
+.paper .hd { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 3px solid var(--p2); padding-bottom: 10px }
+.paper .co b { display: block; font-family: var(--fh), Tahoma, sans-serif; font-size: 1.3em; color: var(--p) }
+.paper .co span { color: var(--mu); font-size: .9em }
+.paper .doctype { text-align: left; font-family: var(--fh), Tahoma, sans-serif; color: var(--mu) }
+.paper .doctype b { display: block; font-size: 1.5em; color: var(--ink) }
+.paper .client { border-radius: 12px; padding: 14px 18px; background: var(--pl); border: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap }
+.paper .client small { display: block; color: var(--mu); font-size: .85em }
+.paper .client b { font-family: var(--fh), Tahoma, sans-serif; font-weight: 800; font-size: 2em; color: var(--p); line-height: 1.2 }
+.paper .client .tag { background: #ffffff; border: 1px solid var(--rule); border-radius: 999px; padding: 3px 12px; font-weight: 600 }
+.paper .meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px }
+.paper .meta div { background: var(--soft); border: 1px solid var(--rule); border-radius: 8px; padding: 6px 9px }
+.paper .meta small { display: block; color: var(--mu); font-size: .8em }
+.paper .sec { font-family: var(--fh), Tahoma, sans-serif; font-weight: 600; color: var(--p); font-size: 1.05em; border-bottom: 1px solid var(--rule); padding-bottom: 4px }
+.paper table { width: 100%; border-collapse: collapse; table-layout: fixed }
+.paper th { background: var(--p); color: #ffffff; font-weight: 700; font-family: var(--fh), Tahoma, sans-serif; padding: 6px 5px; font-size: .9em; text-align: center; border: 1px solid var(--p); overflow-wrap: anywhere }
+.paper td { border: 1px solid var(--rule); padding: 5px 6px; vertical-align: top; overflow-wrap: anywhere }
+.paper td.c { text-align: center } .paper td.a { text-align: left; direction: ltr; white-space: nowrap; overflow: hidden; text-overflow: clip }
+.paper tr.h td { background: var(--pl); font-weight: 600 }
+.paper tr.h small { font-weight: 400; color: var(--mu) }
+.paper tr.sub td { background: #eef5f2; font-weight: 700; color: var(--p) }
+.paper tr.gsub td { background: #f5ecd9; font-weight: 700 }
+.paper tr.grand td { background: var(--p); color: #ffffff; font-weight: 700; border-color: var(--p) }
+.paper tr.pay td { background: #f3faf5 }
+.paper tr.pad td { color: transparent }
+.paper td.mid { border-left: 3px double var(--p) }
+.paper .final { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.paper .final div { border-radius: 10px; padding: 10px 12px; border: 1px solid var(--rule); background: var(--soft) }
+.paper .final small { display: block; color: var(--mu) }
+.paper .final b { font-size: 1.3em; font-family: var(--fh), Tahoma, sans-serif }
+.paper .final .net { background: var(--p); color: #ffffff; border-color: var(--p) }
+.paper .final .net small { color: #d8ece6 }
+.paper .words { border: 1px dashed var(--p2); border-radius: 10px; padding: 9px 12px; background: #fffdf7; line-height: 1.8 }
+.paper .explain { background: #fff8e6; border: 1px solid #f0dca8; border-radius: 10px; padding: 9px 12px; line-height: 1.75 }
+.paper .chip { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: .82em; font-weight: 700; white-space: nowrap }
+.paper .chip.ok { background: #dcf3e4; color: #166534 } .paper .chip.part { background: #fdf0d5; color: #92400e } .paper .chip.no { background: #fde2e0; color: #991b1b }
+.paper .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px }
+.paper .kpis div { border: 1px solid var(--rule); border-radius: 10px; padding: 9px; background: var(--soft) }
+.paper .kpis small { display: block; color: var(--mu) } .paper .kpis b { font-size: 1.35em; font-family: var(--fh), Tahoma, sans-serif }
+.paper .prog { height: 12px; background: #f1d6d3; border-radius: 99px; overflow: hidden; display: flex }
+.paper .prog i { background: var(--cr); display: block }
+.paper .tl { display: flex; flex-direction: column; border-right: 3px solid var(--rule); margin-right: 8px }
+.paper .tl .e { display: grid; grid-template-columns: 82px minmax(0, 1fr) 105px 120px; gap: 8px; padding: 6px 12px 6px 0; position: relative; border-bottom: 1px dashed var(--rule) }
+.paper .tl .e::before { content: ""; position: absolute; right: -8px; top: 10px; width: 11px; height: 11px; border-radius: 50%; background: var(--p) }
+.paper .tl .e.p::before { background: var(--cr) }
+.paper .notes { color: #3b4642; white-space: pre-wrap; border-right: 3px solid var(--p2); padding-right: 8px }
+.paper .sign { display: flex; justify-content: space-between; gap: 30px; padding-top: 18px }
+.paper .sign div { flex: 1; border-top: 1px dashed #9aa8a2; padding-top: 4px; text-align: center; color: var(--mu) }
+.paper .stamp { align-self: flex-start; border: 3px solid var(--cr); color: var(--cr); border-radius: 10px; padding: 4px 14px; font-family: var(--fh), Tahoma, sans-serif; font-weight: 700; transform: rotate(-4deg); font-size: 1.1em }
+.paper .stamp.due { border-color: var(--dr); color: var(--dr) }
+.paper .ft { margin-top: auto; display: flex; justify-content: space-between; gap: 12px; color: var(--mu); font-size: .85em; border-top: 1px solid var(--rule); padding-top: 8px }
+/* أنماط الورقة */
+.paper.lk-modern th { background: var(--pl); color: var(--p); border: 0; border-bottom: 2px solid var(--p) }
+.paper.lk-modern td { border: 0; border-bottom: 1px solid var(--rule) }
+.paper.lk-modern tr:nth-child(even):not(.h):not(.sub):not(.grand):not(.gsub) td { background: #fafcfb }
+.paper.lk-modern .client { background: var(--p); border: 0 } .paper.lk-modern .client b, .paper.lk-modern .client small { color: #ffffff }
+.paper.lk-minimal th { background: transparent; color: var(--ink); border: 0; border-bottom: 2px solid var(--ink) }
+.paper.lk-minimal td { border: 0; border-bottom: 1px solid #e6e9e8 }
+.paper.lk-minimal tr.grand td { background: transparent; color: var(--ink); border-top: 2px solid var(--ink) }
+.paper.lk-minimal .client { background: transparent; border: 0; border-bottom: 1px solid var(--rule); border-radius: 0; padding: 4px 0 10px }
+.paper.lk-band .hd { background: var(--p); color: #ffffff; margin: -32px -36px 0; padding: 22px 36px; border-bottom: 5px solid var(--p2) }
+.paper.lk-band .hd .co b, .paper.lk-band .hd .co span, .paper.lk-band .doctype, .paper.lk-band .doctype b { color: #ffffff }
+.paper .k-head { background: #f0fdfa; border: 1px solid #a7f3d0; border-right: 5px solid #0f4c4c; border-radius: 10px; padding: 10px 14px }
+.paper .k-head h1 { font-family: var(--fh), Tahoma, sans-serif; font-size: 1.5em; margin: 0 0 3px; color: #0f4c4c; font-weight: 800 }
+.paper .k-head .m { font-size: .92em; color: #475569 }
+.paper .k-trip { border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden }
+.paper .k-th { font-family: var(--fh), Tahoma, sans-serif; background: #dcfce7; color: #14532d; padding: 7px 12px; font-weight: 800; font-size: 1.08em; border-bottom: 2px solid #217346 }
+.paper .k-th .m, .paper tr.k-tr .m { font-family: var(--fb), Tahoma, sans-serif; font-weight: 400; font-size: .8em; opacity: .85 }
+.paper.lk-classic th { background: #dcfce7; color: #14532d; border: 1px solid #217346; font-weight: 800 }
+.paper.lk-classic td { border: 1px solid #cbd5e1; text-align: center }
+.paper.lk-classic td.d { text-align: right }
+.paper.lk-classic tr.k-tr td { background: #f0fdf4; color: #14532d; font-family: var(--fh), Tahoma, sans-serif; font-weight: 800; text-align: right }
+.paper.lk-classic tr.sub td { background: #c7e6de; color: #0f4c4c; font-weight: 900 }
+.paper.lk-classic tr.pay td { background: #ecfdf5 } .paper.lk-classic tr.pay td.d { color: #065f46; font-weight: 700 }
+.paper tr.k-grand td { font-family: var(--fh), Tahoma, sans-serif; background: #dbeafe; color: #1e3a8a; font-weight: 900; font-size: 1.05em; border-top: 2px solid #1e3a8a; border-bottom: 2px solid #1e3a8a }
+.paper tr.k-bal td { background: #eef2f7; border-top: 3px double #0f172a; font-family: var(--fh), Tahoma, sans-serif; font-weight: 900; font-size: 1.2em; padding: 9px 8px }
+.paper .k-sig { text-align: center; color: #94a3b8; font-size: .85em }
+.paper.wa { width: 540px; min-height: 0; padding: 0; overflow: hidden; border-radius: 18px; gap: 0 }
+.paper.wa .wh { background: var(--p); color: #ffffff; padding: 18px 20px }
+.paper.wa .wh b { font-family: var(--fh), Tahoma, sans-serif; font-weight: 800; font-size: 1.6em; display: block }
+.paper.wa .wb { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px }
+.paper.wa .big { text-align: center; padding: 14px; border-radius: 14px }
+.paper.wa .big b { display: block; font-size: 2.2em; font-family: var(--fh), Tahoma, sans-serif }
+</style>
+
+<div class="top" id="topbar">
+  <h1 id="ttl">استوديو كشوف حساب العملاء</h1><span class="badge" id="bdg">معاينة · بيانات تجريبية</span>
+  <p id="intro">ابدأ بقالب، وبعدين ظبّط أجزاء الكشف وترتيبها وأعمدة كل جدول وعرضها والعملات. احفظ النتيجة كقالب باسم، وتقدر تخلّيه القالب الافتراضي لأي حساب.</p>
+  <div class="seg" id="xbar" hidden><button type="button" class="btn" data-x="png">🖼️ تنزيل صورة 4K</button><button type="button" class="btn" data-x="pdf">📄 PDF</button><button type="button" class="btn" data-x="print">🖨️ طباعة</button><button type="button" class="btn ghost" data-x="close">✕ إغلاق</button></div>
+</div>
+<div class="app">
+  <aside class="panel" id="panel"></aside>
+  <main class="stage">
+    <div class="bar" id="bar"></div>
+    <div class="paperwrap"><div id="paper"></div></div>
+    <div class="hint">حالة الرحلات (مسددة / جزئي / لم تُسدد) تقديرية: الدفعات بتتوزع على الرحلات من الأقدم للأحدث لكل عملة. الرصيد النهائي ثابت في كل التصميمات.</div>
+  </main>
+</div>
+<div class="modal" id="modal" hidden><div class="box"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>معاينة الصورة بجودة 4K</b><button class="btn ghost" id="mClose">إغلاق</button></div><div class="hint" id="mInfo"></div><img id="mImg" alt="صورة الكشف بجودة عالية"></div></div>
+
+<script>
+(function () {
+  /* ===================== بيانات تجريبية ===================== */
+  var ACCS = [['C1', 'مكتب الهدى للسياحة'], ['C2', 'شركة النور للسياحة'], ['C3', 'أ. محمود عبد الله (فرد)']], CLIENT = ACCS[0][1];
+  var FIRST = ['سارة', 'أحمد', 'منى', 'خالد', 'رضا', 'إيمان', 'شيماء', 'عمر', 'نظيرة', 'مريم', 'أيمن', 'منال', 'آدم', 'فاطمة', 'يحيى', 'هالة', 'وائل', 'نور', 'سعيد', 'دينا'];
+  var D = function (d, m) { return ('0' + d).slice(-2) + '/' + ('0' + m).slice(-2) + '/2026'; };
+  var TR = [[23, 8, 1, 17000], [27, 8, 2, 17000], [28, 8, 1, 17000], [29, 8, 2, 17000], [30, 8, 1, 17000], [31, 8, 2, 17000], [2, 9, 1, 17000], [3, 9, 1, 17000], [4, 9, 2, 14000], [5, 9, 1, 17000],
+    [6, 9, 2, 14000], [6, 9, 1, 17000], [7, 9, 2, 14000], [10, 9, 2, 17000], [12, 9, 1, 17000], [14, 9, 1, 17000], [23, 9, 1, 17000]].map(function (t, i) {
+    var it = [{ d: D(t[0], t[1]), desc: 'تأشيرة وباركود', n: t[2], p: t[3], cur: 'EGP' }];
+    if (i === 16) it.push({ d: D(t[0], t[1]), desc: 'رسوم رفض تأشيرة من القنصلية', n: 1, p: 6400, cur: 'EGP' });
+    if (i === 9) it.push({ d: D(t[0], t[1]), desc: 'إعاشة مكة', n: 2, p: 450, cur: 'SAR' });
+    if (i === 13) it.push({ d: D(t[0], t[1]), desc: 'ترقية فندق', n: 1, p: 120, cur: 'USD' });
+    var rd = new Date(2026, t[1] - 1, t[0] + 14); return { ret: D(rd.getDate(), rd.getMonth() + 1), code: 'TRP-' + ('00' + (38 + i)).slice(-4), name: 'رحلة ' + t[0] + '-' + t[1] + ' عدد ' + t[2] + ' باسم ' + FIRST[i] + (t[2] > 1 ? ' + ' + FIRST[i + 1] : ''), go: D(t[0], t[1]), n: t[2], items: it, grp: i < 6 ? 'A' : (i < 11 ? 'B' : '') };
+  });
+  var GRPN = { A: 'مجموعة دمج أغسطس', B: 'مجموعة دمج سبتمبر' };
+  var SND = ['هدير سامي السيد', 'محمد عبد التواب', 'هبة الله عبد الرحمن', 'محمد محمود', 'عبد الصمد محمود', 'طلعت محمد الشحات', '', 'محمد بكري', 'مازن أسامة', 'شيماء فوزي', 'علاء عبد المنعم', 'محمود إبراهيم'];
+  var PAYS = [[19, 41500], [19, 10200], [19, 33000], [19, 20500], [20, 19000], [20, 12250], [21, 32500], [22, 14600], [22, 18500], [22, 10850], [22, 43000], [23, 12800], [23, 7700], [23, 21000], [24, 13500], [24, 15000], [24, 30000], [25, 13500], [25, 30000]].map(function (p, i) {
+    var w = SND[i % SND.length]; return { d: D(p[0], 8), amt: p[1], cur: 'EGP', raw: 'تحويل من مكتب الهدى من حساب التأشيرات' + (w ? ' ( المحول / ' + w + ' )' : '') + ' — مكتب الهدى', who: w };
+  });
+  PAYS.push({ d: D(15, 9), amt: 900, cur: 'SAR', raw: 'دفعة نقدية بالريال — مكتب الهدى', who: 'نقدي' });
+  PAYS.push({ d: D(16, 9), amt: 100, cur: 'USD', raw: 'دفعة نقدية بالدولار — مكتب الهدى', who: 'نقدي' });
+
+  var BR = { menf: ['منف للسياحة الدولية', 'ترخيص رقم 657 · 0227926617 / 01098886588'], eht: ['إيجيبشان هوسبتلتي ترافيل', 'ترخيص رقم 1956 · 24056444 / 01095088821'], none: null };
+  var PAL = { green: ['#0d5e51', '#b8913a', '#e7f2ee'], navy: ['#0f2557', '#c59a3a', '#e6ecf7'], wine: ['#7a1f2b', '#b8913a', '#f6e8ea'], ink: ['#1f2933', '#7c8a96', '#eef1f4'] };
+  var CS = { EGP: 'جنيه', SAR: 'ريال', USD: 'دولار' }, CSS_ = { EGP: 'ج', SAR: 'ر', USD: '$' };
+  var CORDER = ['EGP', 'SAR', 'USD'];
+  /* ===== (V4.719) داخل البرنامج: البيانات الحقيقية من ST_HOST (بنود/دفعات/رحلات + إجماليات البرنامج نفسها) ===== */
+  var H = null, HD = null, BYC = {};
+  try { H = (window.parent && window.parent !== window && window.parent.ST_HOST) || null; } catch (eH) { H = null; }
+  if (H) { try { HD = H.data(); } catch (eD) { HD = null; } }
+  var FONTS = [['Tajawal', 'تجوال'], ['Cairo', 'كايرو'], ['Noto Naskh Arabic', 'نسخ رسمي'], ['Amiri', 'أميري (رسمي كلاسيكي)'], ['Noto Kufi Arabic', 'كوفي رسمي'], ['Almarai', 'المراعي'], ['IBM Plex Sans Arabic', 'بلكس'], ['Readex Pro', 'ريدكس']];
+
+  /* ===================== أجزاء الكشف والأعمدة ===================== */
+  var BLK = { brand: 'رأس الشركة', client: 'اسم العميل (بارز)', meta: 'بيانات الكشف', kpi: 'مؤشرات ونسبة السداد', explain: 'حسابكم باختصار', summary: 'جدول: سطر لكل رحلة', grouped: 'جدول: مُجمّع بالرحلات',
+    side: 'جدول: مستحق ودفعات جنب بعض', ledger: 'جدول: دفتر زمني برصيد', invoice: 'جدول: فاتورة حسب الخدمة', timeline: 'خط زمني', pays: 'جدول الدفعات', final: 'الإجماليات والرصيد', words: 'الرصيد بالحروف (تفقيط)', notes: 'ملاحظات', sign: 'خانات التوقيع', stamp: 'ختم الحالة' };
+  var COLDEF = {
+    grouped: [['date', 'التاريخ', 13], ['desc', 'البيان', 0], ['n', 'العدد', 7], ['price', 'السعر', 12], ['amt', 'المستحق', 15]],
+    side: [['dDate', 'التاريخ', 13], ['dDesc', 'بيان المستحق', 0], ['dAmt', 'المستحق', 12], ['pAmt', 'الدفعات', 12], ['pDesc', 'بيان الدفعة', 0], ['pDate', 'التاريخ', 13]],
+    ledger: [['date', 'التاريخ', 13], ['desc', 'البيان', 0], ['dr', 'مستحق (مدين)', 13], ['cr', 'مدفوع (دائن)', 13], ['bal', 'الرصيد', 15]],
+    summary: [['idx', '#', 4], ['trip', 'الرحلة', 0], ['go', 'السفر', 11.5], ['ret', 'العودة', 11.5], ['n', 'العدد', 6], ['due', 'المستحق', 11], ['paid', 'المسدد', 11], ['rem', 'المتبقي', 11], ['st', 'الحالة', 9]],
+    invoice: [['idx', '#', 5], ['svc', 'الخدمة', 0], ['qty', 'الكمية', 9], ['unit', 'سعر الوحدة', 14], ['total', 'الإجمالي', 16]],
+    pays: [['date', 'التاريخ', 13], ['desc', 'البيان', 0], ['amt', 'المبلغ', 16]]
+  };
+  var AMT = { amt: 1, price: 1, dAmt: 1, pAmt: 1, dr: 1, cr: 1, bal: 1, due: 1, paid: 1, rem: 1, unit: 1, total: 1 };
+  var defCols = function () { var o = {}; Object.keys(COLDEF).forEach(function (t) { o[t] = COLDEF[t].map(function (c) { return { k: c[0], on: true, w: c[2] }; }); }); return o; };
+  var B_ = function (list) { var on = {}; list.forEach(function (k) { on[k] = 1; }); var order = list.concat(Object.keys(BLK).filter(function (k) { return !on[k]; })); return order.map(function (k) { return { k: k, on: !!on[k] }; }); };
+  var PRESETS = [
+    ['current', 'الكشف الحالي', 'التصميم الحالي — الافتراضي', { blocks: B_(['client']), look: 'classic' }],
+    ['formal', 'رسمي مُجمّع', 'رحلات بإجماليها ثم الدفعات', { blocks: B_(['brand', 'client', 'meta', 'grouped', 'pays', 'final', 'words', 'notes', 'stamp']), look: 'formal' }],
+    ['side', 'مستحق ودفعات جنب بعض', 'الدفعات جنب المستحق', { blocks: B_(['brand', 'client', 'meta', 'side', 'final', 'words', 'notes']), look: 'formal' }],
+    ['exec', 'ملخص + تفصيل', 'مؤشرات ثم سطر لكل رحلة ثم الدفتر', { blocks: B_(['brand', 'client', 'kpi', 'summary', 'ledger', 'final', 'words']), look: 'modern' }],
+    ['ledger', 'دفتر زمني برصيد', 'كل حركة بتاريخها', { blocks: B_(['brand', 'client', 'meta', 'ledger', 'final', 'words', 'sign']), look: 'minimal' }],
+    ['invoice', 'فاتورة مجمعة', 'حسب نوع الخدمة', { blocks: B_(['brand', 'client', 'meta', 'invoice', 'final', 'words', 'notes', 'sign']), look: 'band' }],
+    ['friendly', 'مبسّط للعميل', 'كلام بسيط + سطر لكل رحلة', { blocks: B_(['brand', 'client', 'explain', 'summary', 'final', 'words', 'notes']), look: 'modern' }],
+    ['story', 'خط زمني', 'رحلات ودفعات خطوة بخطوة', { blocks: B_(['brand', 'client', 'explain', 'timeline', 'final', 'words']), look: 'modern' }],
+    ['group', 'تقرير مجموعة', 'إجمالي فرعي لكل مجموعة دمج', { blocks: B_(['brand', 'client', 'meta', 'summary', 'grouped', 'pays', 'final', 'words', 'stamp']), look: 'band', gsub: true }],
+    ['wa', 'بطاقة واتساب', 'ملخص سريع للإرسال', { blocks: B_(['client']), look: 'wa' }]
+  ];
+  if (HD) {
+    CLIENT = HD.client || ''; ACCS = [[HD.accKey || CLIENT, CLIENT]]; GRPN = {};
+    (HD.groups || []).forEach(function (g) { GRPN[g.id] = g.name; });
+    var byT = {}, gen = { key: 'عام', code: 'عام', name: 'بنود ودفعات عامة (غير مخصصة لرحلة)', go: '', ret: '', n: 0, grp: '', items: [] };
+    TR = (HD.trips || []).map(function (t) { var o = { key: t.key, code: t.code || t.key, name: t.name || t.key, go: t.go || '', ret: t.ret || '', n: t.n || 0, grp: t.grp || '', items: [] }; byT[t.key] = o; return o; });
+    var tOf = function (k) { if (k === 'عام' || !k) return gen; if (!byT[k]) { byT[k] = { key: k, code: k, name: k, go: '', ret: '', n: 0, grp: '', items: [] }; TR.push(byT[k]); } return byT[k]; };
+    (HD.items || []).forEach(function (i) { var t = tOf(i.trip), v = i.disc ? -Math.abs(+i.v || 0) : (+i.v || 0), one = i.direct || !(+i.n) ;
+      t.items.push({ d: i.d || t.go, desc: (i.disc ? 'خصم: ' : '') + (i.carry ? '🔄 ' : '') + (i.desc || '') + (i.nights ? ' (' + (i.n || 1) + ' × ' + i.nights + ' ليلة)' : '') + (i.company ? ' (' + i.company + ')' : ''), n: one ? 1 : +i.n, p: one ? v : (i.disc ? -Math.abs(+i.p || 0) : +i.p), cur: i.cur || 'EGP' }); });
+    PAYS = [];
+    (HD.pays || []).forEach(function (p) {
+      var t = tOf(p.trip);
+      if (p.fx) { var dst = p.cur === 'SAR' ? 'EGP' : 'SAR', conv = Math.round((+p.amt || 0) * (+p.rate || 0));
+        PAYS.push({ d: p.d, amt: +p.amt || 0, cur: p.cur, raw: '💱 ' + (p.desc || 'تحويل رصيد') + ' (' + CS[p.cur] + ' ⇐ ' + CS[dst] + ')', who: '', trip: t.key });
+        t.items.push({ d: p.d, desc: '💱 تحويل رصيد من ' + CS[p.cur] + ' إلى ' + CS[dst] + (p.rate ? ' (سعر ' + p.rate + ')' : ''), n: 1, p: conv, cur: dst }); }
+      else PAYS.push({ d: p.d, amt: +p.amt || 0, cur: p.cur, raw: (p.carry ? '🔄 ' : '') + (p.desc || 'دفعة'), who: '', trip: t.key });
+    });
+    if (gen.items.length || PAYS.some(function (p) { return p.trip === 'عام'; })) TR.push(gen);
+    TR = TR.filter(function (t) { return t.items.length || PAYS.some(function (p) { return p.trip === t.key; }); });
+    TR.forEach(function (t) { BYC[t.code] = t; });
+  }
+  var O0 = { preset: 'current', blocks: PRESETS[1][3].blocks, cols: defCols(), look: 'classic', goDate: true, retDate: true, fb: 'Tajawal', fh: 'Cairo', acc: HD ? (HD.accKey || CLIENT) : 'C1', role: 'admin', scope: 'all', trip: TR[0] ? TR[0].code : '', grp: HD ? ((HD.groups || [])[0] || {}).id || '' : 'A', sel: {}, from: '', to: '',
+    sub: true, gsub: true, codes: true, status: true, short: true, run: true, sideTrip: false, payInline: false, curs: { EGP: true, SAR: true, USD: true }, curMode: 'label',
+    brand: 'menf', pal: 'green', fs: 'm', land: false, notes: 'الأسعار شاملة الرسوم الحكومية. أي استفسار عن الحساب: 01098886588', title: 'كشف حساب', open: { acc: true, tpl: true } };
+  var O = JSON.parse(JSON.stringify(O0)), SAVED = [], ASG = {};
+  var LSK = HD ? 'stmtStudio3.app' : 'stmtStudio3';
+  try { var sv = JSON.parse(localStorage.getItem(LSK) || 'null'); if (sv) Object.keys(sv).forEach(function (k) { if (k in O && k !== 'acc' && k !== 'role' && k !== 'scope' && k !== 'trip' && k !== 'grp' && k !== 'sel') O[k] = sv[k]; });
+    if (!HD) { SAVED = JSON.parse(localStorage.getItem('stmtStudio3.saved') || '[]') || []; ASG = JSON.parse(localStorage.getItem('stmtStudio3.asg') || '{}') || {}; } } catch (e) {}
+  if (HD) { O.acc = HD.accKey || CLIENT; O.role = (H.isAdmin && H.isAdmin()) ? 'admin' : 'user'; O.scope = 'all'; O.trip = TR[0] ? TR[0].code : ''; O.sel = {}; }
+  var store = function () { try { localStorage.setItem(LSK, JSON.stringify(O)); if (!HD) { localStorage.setItem('stmtStudio3.saved', JSON.stringify(SAVED)); localStorage.setItem('stmtStudio3.asg', JSON.stringify(ASG)); } } catch (e) {} };
+  // القوالب العامة + القالب الافتراضي لكل حساب من قاعدة البيانات (409)
+  var tplSet = function (r) { SAVED = (r && r.tpls || []).map(function (t) { return { id: t.id, name: t.name, cfg: t.cfg || {} }; }); ASG = (r && r.assign) || {}; };
+  var tplLoad = function () { if (!H) return Promise.resolve(); return H.rpc('st_tpls', {}).then(function (r) { tplSet(r); applyAsg(ASG[O.acc] || ''); all(); }, function (e) { try { H.toast('⚠️ تعذّر تحميل القوالب: ' + ((e && e.message) || e)); } catch (eT) {} }); };
+
+  var $ = function (i) { return document.getElementById(i); };
+  var E = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var F = function (n) { return Math.round(n).toLocaleString('en-US'); };
+  var DK = function (s) { var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s || ''); return m ? +m[3] * 1e4 + +m[2] * 100 + +m[1] : 0; };
+  var add = function (o, c, v) { o[c] = (o[c] || 0) + v; return o; };
+  var one = function (c, v) { var o = {}; o[c] = v; return o; };
+
+  /* ===================== التفقيط ===================== */
+  var ONES = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة', 'عشرة', 'أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 'ستة عشر', 'سبعة عشر', 'ثمانية عشر', 'تسعة عشر'];
+  var TENS = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+  var HUND = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
+  function w999(n) { var h = Math.floor(n / 100), r = n % 100, out = []; if (h) out.push(HUND[h]); if (r) out.push(r < 20 ? ONES[r] : (r % 10 ? ONES[r % 10] + ' و' : '') + TENS[Math.floor(r / 10)]); return out.join(' و'); }
+  function scale(n, w) { if (!n) return ''; if (n === 1) return w[0]; if (n === 2) return w[1]; if (n <= 10) return w999(n) + ' ' + w[2]; return w999(n) + ' ' + w[0]; }
+  function words(n) { n = Math.round(Math.abs(n)); if (!n) return 'صفر';
+    var m = Math.floor(n / 1e6), t = Math.floor(n / 1000) % 1000, r = n % 1000, out = [];
+    if (m) out.push(scale(m, ['مليون', 'مليونان', 'ملايين'])); if (t) out.push(scale(t, ['ألف', 'ألفان', 'آلاف'])); if (r) out.push(w999(r)); return out.join(' و'); }
+  var CURW = { EGP: 'جنيهاً مصرياً', SAR: 'ريالاً سعودياً', USD: 'دولاراً أمريكياً' };
+
+  /* ===================== الحساب ===================== */
+  function scope() {
+    var curOn = function (c) { return O.curs[c] !== false; };
+    var f = DK(O.from), to = DK(O.to), inR = function (d) { var k = DK(d); return (!f || k >= f) && (!to || k <= to); };
+    var trips = TR.filter(function (t) { return O.scope === 'trip' ? t.code === O.trip : O.scope === 'grp' ? t.grp === O.grp : O.sel[t.code] !== false; })
+      .map(function (t) { return Object.assign({}, t, { items: t.items.filter(function (x) { return inR(x.d) && curOn(x.cur); }) }); }).filter(function (t) { return t.items.length; });
+    var due = {}, allDue = {}; trips.forEach(function (t) { t.items.forEach(function (x) { add(due, x.cur, x.n * x.p); }); });
+    TR.forEach(function (t) { t.items.forEach(function (x) { add(allDue, x.cur, x.n * x.p); }); });
+    var pays = PAYS.filter(function (p) { return inR(p.d) && curOn(p.cur); });
+    if (HD) pays = pays.filter(function (p) { var t = BYC[p.trip] || TR.filter(function (z) { return z.key === p.trip; })[0]; return !t ? O.scope === 'all' : (O.scope === 'trip' ? t.code === O.trip : O.scope === 'grp' ? t.grp === O.grp : O.sel[t.code] !== false); });
+    else if (O.scope !== 'all') pays = pays.map(function (p) { return Object.assign({}, p, { amt: Math.round(p.amt * (allDue[p.cur] ? (due[p.cur] || 0) / allDue[p.cur] : 0)) }); }).filter(function (p) { return p.amt > 0; });
+    var paid = {}; pays.forEach(function (p) { add(paid, p.cur, p.amt); });
+    var pool = Object.assign({}, paid);
+    trips.forEach(function (t) { t.due = {}; t.paid = {}; t.items.forEach(function (x) { add(t.due, x.cur, x.n * x.p); });
+      Object.keys(t.due).forEach(function (c) { var a = Math.min(t.due[c], pool[c] || 0); t.paid[c] = a; pool[c] = (pool[c] || 0) - a; });
+      var r = 0, d = 0; Object.keys(t.due).forEach(function (c) { r += t.due[c] - t.paid[c]; d += t.due[c]; }); t.st = r <= 0.5 ? 'ok' : r < d ? 'part' : 'no'; });
+    var curs = CORDER.filter(function (c) { return due[c] || paid[c]; }), net = {}; curs.forEach(function (c) { net[c] = (due[c] || 0) - (paid[c] || 0); });
+    if (HD && HD.totals) {   // إجماليات البرنامج نفسها (نفس _accCalc_): دفعات كل رحلة من دفعاتها لا بالتوزيع، والرصيد من الحساب الفعلي
+      var T = HD.totals, bt = T.byTrip || {};
+      trips.forEach(function (t) { t.paid = {}; pays.forEach(function (p) { if (p.trip === t.key) add(t.paid, p.cur, p.amt); }); var c = bt[t.key];
+        if (c) { var rE = c.netE || 0, rS = c.netS || 0, anyPaid = (c.paidE || 0) + (c.paidS || 0) > 0; t.st = (rE <= 0.5 && rS <= 0.5) ? 'ok' : anyPaid ? 'part' : 'no'; } });
+      var nE = 0, nS = 0, ok = false;
+      if (O.scope === 'all' && !Object.keys(O.sel).some(function (k) { return O.sel[k] === false; }) && !f && !to && T.all) { nE = T.all.netE || 0; nS = T.all.netS || 0; ok = true; }
+      else if (!f && !to) { ok = true; trips.forEach(function (t) { var c = bt[t.key]; if (c) { nE += c.netE || 0; nS += c.netS || 0; } else ok = false; }); }
+      if (ok) { if (curs.indexOf('EGP') < 0 && Math.abs(nE) > 0.5) curs.push('EGP'); if (curs.indexOf('SAR') < 0 && Math.abs(nS) > 0.5) curs.push('SAR'); if (curs.indexOf('EGP') >= 0) net.EGP = nE; if (curs.indexOf('SAR') >= 0) net.SAR = nS; }
+    }
+    return { trips: trips, pays: pays, due: due, paid: paid, net: net, curs: curs };
+  }
+  var payTxt = function (p) { return O.short ? (p.who === 'نقدي' ? 'دفعة نقدية' : 'تحويل بنكي' + (p.who ? ' — ' + p.who : '')) : p.raw; };
+  var netTxt = function (v, c) { return Math.abs(v) < 0.5 ? 'مسدد' : v > 0 ? F(v) + ' ' + CS[c] + ' مطلوب منكم' : F(-v) + ' ' + CS[c] + ' رصيد لكم'; };
+  var tmeta = function (t, sep) { var a = []; if (O.codes) a.push(t.code); if (O.goDate) a.push('سفر ' + t.go); if (O.retDate) a.push('عودة ' + t.ret); return a.length ? (sep || ' · ') + a.join(' · ') : ''; };
+  var chip = function (st) { return O.status ? '<span class="chip ' + st + '">' + { ok: 'مسددة', part: 'جزئي', no: 'لم تُسدد' }[st] + '</span>' : ''; };
+  var sumM = function (a) { var o = {}; a.forEach(function (m) { Object.keys(m || {}).forEach(function (c) { add(o, c, m[c]); }); }); return o; };
+
+  /* ===================== محرك الجداول (أعمدة مرتبة + عرض + عملات) ===================== */
+  function rcols(type, S) {
+    var multi = O.curMode === 'cols' && S.curs.length > 1, out = [];
+    (O.cols[type] || []).forEach(function (c) { if (!c.on || (c.k === 'go' && !O.goDate) || (c.k === 'ret' && !O.retDate)) return; var d = COLDEF[type].filter(function (x) { return x[0] === c.k; })[0]; if (!d) return;
+      if (AMT[c.k] && multi) S.curs.forEach(function (cu) { out.push({ k: c.k, lbl: d[1] + ' ' + CS[cu], w: c.w ? Math.max(c.w * 0.72, 8) : 0, cur: cu }); });
+      else out.push({ k: c.k, lbl: d[1], w: c.w, cur: null }); });
+    return out;
+  }
+  function money(m, cu, cls) { m = m || {}; if (cu) return m[cu] ? '<span class="n ' + (cls || '') + '">' + F(m[cu]) + '</span>' : '';
+    var ks = CORDER.filter(function (c) { return m[c]; }); return ks.map(function (c) { return '<span class="n ' + (cls || '') + '">' + F(m[c]) + ' ' + CSS_[c] + '</span>'; }).join('<br>'); }
+  function table(type, S, rows) {
+    var cs = rcols(type, S); if (!cs.length) return '';
+    var mid = type === 'side' ? cs.map(function (c) { return c.k; }).lastIndexOf('dAmt') : -1;
+    var h = '<table><colgroup>' + cs.map(function (c) { return '<col' + (c.w ? ' style="width:' + c.w + '%"' : '') + '>'; }).join('') + '</colgroup><thead><tr>' + cs.map(function (c) { return '<th>' + E(c.lbl) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    rows.forEach(function (r) {
+      if (r.t === 'h') { h += '<tr class="h"><td colspan="' + cs.length + '">' + r.html + '</td></tr>'; return; }
+      var lblDone = false, txtIx = cs.map(function (c) { return AMT[c.k] ? -1 : 1; }).indexOf(1);
+      h += '<tr class="' + (r.cls || '') + '">' + cs.map(function (c, i) {
+        var v = r.v[c.k], cls = (AMT[c.k] ? 'a' : (c.k === 'desc' || c.k === 'trip' || c.k === 'svc' || /Desc$/.test(c.k) ? '' : 'c')) + (i === mid ? ' mid' : '');
+        if (r.t === 's' && !AMT[c.k]) { if (!lblDone && (c.k === r.at || i === txtIx)) { lblDone = true; return '<td class="' + cls + '"><b>' + r.label + '</b></td>'; } return '<td class="' + cls + '"></td>'; }
+        if (AMT[c.k]) return '<td class="' + cls + '">' + (v && typeof v === 'object' ? money(v, c.cur, r.amtCls && r.amtCls[c.k]) : (v || '')) + '</td>';
+        return '<td class="' + cls + '">' + (v == null ? '' : v) + '</td>';
+      }).join('') + '</tr>';
+    });
+    return h + '</tbody></table>';
+  }
+
+  /* ===================== أجزاء الكشف ===================== */
+  var B = {};
+  B.brand = function (S) { var b = BR[O.brand];
+    return '<div class="hd"><div class="co">' + (b ? '<b>' + E(b[0]) + '</b><span>' + E(b[1]) + '</span>' : '') + '</div><div class="doctype"><b>' + E(O.title) + '</b><span class="n">ST-2611-0042 · 26/11/2026</span></div></div>'; };
+  B.client = function (S) { var sc = O.scope === 'trip' ? 'رحلة: ' + (S.trips[0] || {}).name : O.scope === 'grp' ? GRPN[O.grp] + ' (' + S.trips.length + ' رحلات)' : 'كل الرحلات (' + S.trips.length + ')';
+    return '<div class="client"><div><small>كشف حساب السادة</small><b>' + E(CLIENT) + '</b></div><span class="tag">' + E(sc) + '</span></div>'; };
+  B.meta = function (S) { var first = S.trips.reduce(function (m, t) { return !m || DK(t.go) < DK(m) ? t.go : m; }, '');
+    return '<div class="meta"><div><small>الفترة</small><b class="n">' + E(O.from || first || '—') + ' ← ' + E(O.to || '26/11/2026') + '</b></div><div><small>عدد الرحلات</small><b>' + S.trips.length + '</b></div><div><small>عدد المعتمرين</small><b>' + S.trips.reduce(function (s, t) { return s + t.n; }, 0) + '</b></div><div><small>عدد الدفعات</small><b>' + S.pays.length + '</b></div></div>'; };
+  B.kpi = function (S) { var c = S.curs[0] || 'EGP', d = S.due[c] || 0, p = S.paid[c] || 0, pct = d ? Math.min(100, Math.round(p / d * 100)) : 100, lp = S.pays.slice().sort(function (a, b) { return DK(b.d) - DK(a.d); })[0];
+    return '<div class="kpis"><div><small>إجمالي المستحق</small><b>' + money(S.due) + '</b></div><div><small>إجمالي المدفوع</small><b class="cr">' + money(S.paid) + '</b></div><div><small>الرحلات / المعتمرين</small><b>' + S.trips.length + ' / ' + S.trips.reduce(function (s, t) { return s + t.n; }, 0) + '</b></div><div><small>آخر دفعة</small><b class="n">' + (lp ? lp.d : '—') + '</b></div></div>' +
+      '<div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><b>نسبة السداد بال' + CS[c] + ' ' + pct + '%</b><span>' + E(netTxt(S.net[c] || 0, c)) + '</span></div><div class="prog"><i style="width:' + pct + '%"></i></div></div>'; };
+  B.explain = function (S) { var parts = S.curs.map(function (c) { var v = S.net[c]; return Math.abs(v) < 0.5 ? 'بال' + CS[c] + ' مسدد' : v > 0 ? 'المتبقي عليكم <b class="n">' + F(v) + '</b> ' + CS[c] : 'ليكم رصيد <b class="n">' + F(-v) + '</b> ' + CS[c] + ' يتخصم من الرحلات الجاية'; });
+    var c = S.curs[0] || 'EGP';
+    return '<div class="explain">📌 <b>حسابكم باختصار:</b> إجمالي المطلوب عن ' + S.trips.length + ' رحلة <b class="n">' + F(S.due[c] || 0) + '</b> ' + CS[c] + '، ودفعتم <b class="n">' + F(S.paid[c] || 0) + '</b> ' + CS[c] + '. ' + parts.join(' — ') + '.</div>'; };
+  B.grouped = function (S) {
+    var rows = [], last = null, g = [], gn = 0;
+    var flush = function () { if (O.gsub && last && gn > 1 && O.scope !== 'trip') rows.push({ t: 's', cls: 'gsub', label: 'إجمالي ' + (GRPN[last] || 'المجموعة') + ' (' + gn + ' رحلات)', v: { amt: sumM(g) } }); g = []; gn = 0; };
+    S.trips.forEach(function (t) {
+      if (t.grp !== last) { flush(); last = t.grp; }
+      rows.push({ t: 'h', html: '✈️ ' + E(t.name) + (tmeta(t) ? ' <small>(' + tmeta(t, '') + ')</small>' : '') + ' ' + chip(t.st) });
+      t.items.forEach(function (x) { rows.push({ v: { date: '<span class="n">' + x.d + '</span>', desc: E(x.desc), n: x.n, price: one(x.cur, x.p), amt: one(x.cur, x.n * x.p) } }); });
+      if (O.payInline && Object.keys(t.paid).some(function (c) { return t.paid[c]; })) { var neg = {}; Object.keys(t.paid).forEach(function (c) { if (t.paid[c]) neg[c] = t.paid[c]; }); rows.push({ t: 's', cls: 'pay', label: '💵 مسدد من دفعاتكم', v: { amt: neg }, amtCls: { amt: 'cr' } }); }
+      if (O.sub) { var rem = {}; Object.keys(t.due).forEach(function (c) { rem[c] = O.payInline ? t.due[c] - t.paid[c] : t.due[c]; }); rows.push({ t: 's', cls: 'sub', label: O.payInline ? 'المتبقي من الرحلة' : 'إجمالي الرحلة', v: { amt: rem } }); }
+      g.push(t.due); gn++;
+    });
+    flush();
+    rows.push({ t: 's', cls: 'grand', label: 'إجمالي المستحق', v: { amt: S.due } });
+    return '<div class="sec">📋 المستحقات</div>' + table('grouped', S, rows);
+  };
+  B.side = function (S) {
+    var L = [], R = [];
+    S.trips.forEach(function (t) { if (O.sideTrip) L.push({ d: t.go, desc: E(t.name) + (tmeta(t) ? ' <span class="mu">' + tmeta(t, '') + '</span>' : '') + ' ' + chip(t.st), m: t.due });
+      else t.items.forEach(function (x) { L.push({ d: x.d, desc: E(t.name) + ' — ' + E(x.desc) + (O.cols.side.some(function (c) { return c.k === 'dAmt' && c.on; }) && x.n > 1 ? ' <span class="mu">(' + x.n + ' × ' + F(x.p) + ')</span>' : ''), m: one(x.cur, x.n * x.p) }); }); });
+    S.pays.forEach(function (p) { R.push({ d: p.d, desc: E(payTxt(p)), m: one(p.cur, p.amt) }); });
+    var n = Math.max(L.length, R.length), rows = [];
+    for (var i = 0; i < n; i++) { var a = L[i], b = R[i]; rows.push({ cls: !a || !b ? '' : '', v: { dDate: a ? '<span class="n">' + a.d + '</span>' : '', dDesc: a ? a.desc : '', dAmt: a ? a.m : null, pAmt: b ? b.m : null, pDesc: b ? b.desc : '', pDate: b ? '<span class="n">' + b.d + '</span>' : '' }, amtCls: { pAmt: 'cr' } }); }
+    rows.push({ t: 's', cls: 'grand', label: 'الإجماليات', at: 'dDesc', v: { dAmt: S.due, pAmt: S.paid } });
+    return '<div class="sec">⚖️ المستحقات والدفعات جنب بعض</div>' + table('side', S, rows);
+  };
+  B.ledger = function (S) {
+    var ev = [];
+    S.trips.forEach(function (t) { if (O.sideTrip) Object.keys(t.due).forEach(function (c) { ev.push({ d: t.go, k: 0, txt: '✈️ ' + E(t.name), m: one(c, t.due[c]) }); });
+      else t.items.forEach(function (x) { ev.push({ d: x.d, k: 0, txt: E(t.name) + ' — ' + E(x.desc) + (x.n > 1 ? ' <span class="mu">(' + x.n + ' × ' + F(x.p) + ')</span>' : ''), m: one(x.cur, x.n * x.p) }); }); });
+    S.pays.forEach(function (p) { ev.push({ d: p.d, k: 1, txt: '💵 ' + E(payTxt(p)), c: one(p.cur, p.amt) }); });
+    ev.sort(function (a, b) { return DK(a.d) - DK(b.d) || a.k - b.k; });
+    var bal = {}, rows = ev.map(function (e) { var mm = e.m || e.c; Object.keys(mm).forEach(function (c) { add(bal, c, e.m ? mm[c] : -mm[c]); });
+      var bv = {}; Object.keys(mm).forEach(function (c) { bv[c] = bal[c]; });
+      return { cls: e.k ? 'pay' : '', v: { date: '<span class="n">' + e.d + '</span>', desc: e.txt, dr: e.m || null, cr: e.c || null, bal: O.run ? bv : null }, amtCls: { dr: 'dr', cr: 'cr' } }; });
+    rows.push({ t: 's', cls: 'grand', label: 'الإجمالي', v: { dr: S.due, cr: S.paid, bal: S.net } });
+    return '<div class="sec">📒 الحركات بالتاريخ</div>' + table('ledger', S, rows);
+  };
+  B.summary = function (S) {
+    var rows = S.trips.map(function (t, i) { var rem = {}; Object.keys(t.due).forEach(function (c) { rem[c] = t.due[c] - t.paid[c]; });
+      return { v: { idx: i + 1, trip: E(t.name) + (O.codes ? '<br><span class="mu" style="font-size:.85em">' + t.code + '</span>' : ''), go: '<span class="n">' + t.go + '</span>', ret: '<span class="n">' + t.ret + '</span>', n: t.n, due: t.due, paid: t.paid, rem: rem, st: chip(t.st) }, amtCls: { paid: 'cr', rem: 'dr' } }; });
+    var tp = sumM(S.trips.map(function (t) { return t.paid; })), tr = {}; Object.keys(S.due).forEach(function (c) { tr[c] = S.due[c] - (tp[c] || 0); });
+    rows.push({ t: 's', cls: 'grand', label: 'الإجمالي (' + S.trips.length + ' رحلة)', v: { due: S.due, paid: tp, rem: tr } });
+    return '<div class="sec">🧾 الرحلات</div>' + table('summary', S, rows);
+  };
+  B.invoice = function (S) {
+    var g = {}, ord = []; S.trips.forEach(function (t) { t.items.forEach(function (x) { var k = x.desc + '|' + x.p + '|' + x.cur; if (!g[k]) { g[k] = { desc: x.desc, p: x.p, cur: x.cur, n: 0, tr: 0 }; ord.push(k); } g[k].n += x.n; g[k].tr++; }); });
+    var rows = ord.map(function (k, i) { var x = g[k]; return { v: { idx: i + 1, svc: E(x.desc) + ' <span class="mu">(' + x.tr + ' رحلة)</span>', qty: x.n, unit: one(x.cur, x.p), total: one(x.cur, x.n * x.p) } }; });
+    rows.push({ t: 's', cls: 'sub', label: 'الإجمالي', v: { total: S.due } });
+    rows.push({ t: 's', cls: 'pay', label: 'يخصم: المدفوع (' + S.pays.length + ' دفعة)', v: { total: S.paid }, amtCls: { total: 'cr' } });
+    rows.push({ t: 's', cls: 'grand', label: 'الصافي', v: { total: S.net } });
+    return '<div class="sec">🧮 الخدمات</div>' + table('invoice', S, rows);
+  };
+  B.pays = function (S) { if (!S.pays.length) return '';
+    var rows = S.pays.map(function (p) { return { cls: 'pay', v: { date: '<span class="n">' + p.d + '</span>', desc: E(payTxt(p)), amt: one(p.cur, p.amt) }, amtCls: { amt: 'cr' } }; });
+    rows.push({ t: 's', cls: 'sub', label: 'إجمالي الدفعات', v: { amt: S.paid } });
+    return '<div class="sec">💵 الدفعات (' + S.pays.length + ')</div>' + table('pays', S, rows); };
+  B.timeline = function (S) {
+    var ev = []; S.trips.forEach(function (t) { ev.push({ d: t.go, k: 0, t: '✈️ ' + E(t.name) + (O.retDate ? ' <span class="mu">(عودة ' + t.ret + ')</span>' : ''), s: t.items.map(function (x) { return E(x.desc) + ' ' + x.n + ' × ' + F(x.p) + ' ' + CSS_[x.cur]; }).join(' · '), m: t.due }); });
+    S.pays.forEach(function (p) { ev.push({ d: p.d, k: 1, t: '💵 ' + E(payTxt(p)), s: '', m: one(p.cur, p.amt) }); });
+    ev.sort(function (a, b) { return DK(a.d) - DK(b.d) || a.k - b.k; });
+    var bal = {};
+    return '<div class="sec">🧭 حسابكم خطوة بخطوة</div><div class="tl">' + ev.map(function (e) { Object.keys(e.m).forEach(function (c) { add(bal, c, e.k ? -e.m[c] : e.m[c]); });
+      return '<div class="e' + (e.k ? ' p' : '') + '"><span class="n">' + e.d + '</span><div><b>' + e.t + '</b>' + (e.s ? '<br><span class="mu">' + e.s + '</span>' : '') + '</div><span style="text-align:left" class="' + (e.k ? 'cr' : 'dr') + '">' + money(e.m) + '</span><span class="mu" style="text-align:left">' + (O.run ? 'الرصيد ' + money(bal) : '') + '</span></div>'; }).join('') + '</div>'; };
+  B.final = function (S) { var lines = function (m) { return S.curs.map(function (c) { return '<span class="n">' + F(m[c] || 0) + '</span> <small style="display:inline">' + CS[c] + '</small>'; }).join('<br>'); };
+    return '<div class="final"><div><small>إجمالي المستحق</small><b>' + lines(S.due) + '</b></div><div><small>إجمالي المدفوع</small><b>' + lines(S.paid) + '</b></div><div class="net"><small>الرصيد النهائي</small><b>' + S.curs.map(function (c) { return E(netTxt(S.net[c], c)); }).join('<br>') + '</b></div></div>'; };
+  B.words = function (S) { return '<div class="words">' + S.curs.map(function (c) { var v = S.net[c];
+    return '✍️ <b>الرصيد ب' + CS[c] + ':</b> ' + (Math.abs(v) < 0.5 ? 'مسدد بالكامل — لا يوجد رصيد' : 'فقط ' + words(v) + ' ' + CURW[c] + ' لا غير — ' + (v > 0 ? 'مستحق علينا تحصيله منكم' : 'رصيد دائن لكم')); }).join('<br>') + '</div>'; };
+  B.notes = function () { return O.notes ? '<div class="notes">' + E(O.notes) + '</div>' : ''; };
+  B.sign = function () { return '<div class="sign"><div>المحاسب</div><div>المدير المالي</div><div>توقيع العميل بالاستلام</div></div>'; };
+  B.stamp = function (S) { var due = S.curs.some(function (c) { return S.net[c] > 0.5; }); return '<div class="stamp' + (due ? ' due' : '') + '">' + (due ? 'متبقي سداد' : 'مسدد بالكامل') + '</div>'; };
+  function classic(S) {
+    if (H) { var tk = O.scope === 'trip' && BYC[O.trip] ? BYC[O.trip].key : '';
+      return '<div class="k-head"><h1>💰 كشف حساب — ' + E(CLIENT) + (tk ? ' — ' + E(BYC[O.trip].name) : ' (شامل)') + '</h1><div class="m">الكشف الحالي بتصميمه المعتمد يُطبع من البرنامج مباشرة' + (O.scope === 'grp' ? ' — للمجموعة استخدم «كشف شامل» من شاشة الحساب' : '') + '</div></div>' +
+        '<div class="explain" style="margin-top:8px">📌 ده القالب الافتراضي لأي حساب مش متخصصله قالب. اختر من القوالب التانية في اللوحة للمعاينة، أو اطبع الكشف الحالي:</div>' +
+        '<div class="seg" style="margin-top:10px"><button type="button" class="btn" data-cur="print">🖨️ طباعة الكشف الحالي</button><button type="button" class="btn" data-cur="pdf">📄 PDF / واتساب</button><button type="button" class="btn ghost" data-cur="image">📸 صورة HD</button></div>'; }
+    var multi = S.trips.length > 1, t0 = S.trips[0];
+    var dts = function (t) { var a = []; if (O.goDate) a.push(t.go); if (O.retDate) a.push(t.ret); return a.join(' ← '); };
+    var h = '<div class="k-head"><h1>💰 كشف حساب — ' + E(CLIENT) + (O.scope === 'trip' ? ' — ' + E(t0.name) : ' (شامل)') + '</h1><div class="m">تاريخ الطباعة: <b class="n">26/11/2026 14:05</b></div></div>';
+    var th = multi ? (O.scope === 'grp' ? '📊 كشف حساب مدمج — ' : '📊 كشف حساب شامل — ') + S.trips.length + ' رحلات'
+      : '✈️ ' + E(t0.name) + ' <span class="m">' + [O.codes ? t0.code : '', dts(t0), '👨' + t0.n + ' 🧒0 👶0', 'نوع المحاسبة: برنامج'].filter(Boolean).join(' · ') + '</span>';
+    var b = '<table><colgroup><col style="width:14%"><col><col style="width:8%"><col style="width:15%"><col style="width:17%"></colgroup><thead><tr><th>التاريخ</th><th>البيان</th><th>العدد</th><th>السعر</th><th>المستحق</th></tr></thead><tbody>';
+    S.trips.forEach(function (t) {
+      if (multi) b += '<tr class="k-tr"><td colspan="5">✈️ ' + E(t.name) + ' <span class="m">' + [O.codes ? t.code : '', dts(t)].filter(Boolean).join(' · ') + '</span> ' + chip(t.st) + '</td></tr>';
+      t.items.forEach(function (x) { b += '<tr><td><span class="n">' + x.d + '</span></td><td class="d">' + E(x.desc) + '</td><td>' + x.n + '</td><td>' + money(one(x.cur, x.p)) + '</td><td>' + money(one(x.cur, x.n * x.p)) + '</td></tr>'; });
+      if (O.sub && multi) b += '<tr class="sub"><td></td><td class="d">إجمالي الرحلة</td><td></td><td></td><td>' + money(t.due) + '</td></tr>';
+    });
+    S.pays.forEach(function (p) { b += '<tr class="pay"><td><span class="n">' + p.d + '</span></td><td class="d">💵 ' + E(payTxt(p)) + '</td><td></td><td></td><td>' + money(one(p.cur, -p.amt), null, 'cr') + '</td></tr>'; });
+    b += '<tr class="k-grand"><td colspan="4" style="text-align:right">الإجمالي المستحق</td><td>' + money(S.due) + '</td></tr>';
+    b += '<tr class="k-grand"><td colspan="4" style="text-align:right">إجمالي المدفوع</td><td>' + money(S.paid) + '</td></tr>';
+    b += '<tr class="k-bal"><td colspan="3" style="text-align:right">⚖️ الرصيد</td><td colspan="2">' + S.curs.map(function (c) { var v = S.net[c]; return '<span class="' + (v > 0.5 ? 'dr' : 'cr') + '">' + E(netTxt(v, c)) + '</span>'; }).join('<br>') + '</td></tr></tbody></table>';
+    return h + '<div class="k-trip"><div class="k-th">' + th + '</div>' + b + '</div>' + '<div class="k-sig">مُولَّد تلقائياً من منظومة منف للسياحة — Smart Manager Pro</div>';
+  }
+  function wa(S) { var c = S.curs[0] || 'EGP', v = S.net[c] || 0, d = S.due[c] || 0, p = S.paid[c] || 0, pct = d ? Math.min(100, Math.round(p / d * 100)) : 100, b = BR[O.brand];
+    return '<div class="wh">' + (b ? '<span>' + E(b[0]) + '</span>' : '') + '<b>' + E(CLIENT) + '</b><span>ملخص الحساب · 26/11/2026</span></div><div class="wb">' +
+      S.curs.map(function (cu) { var x = S.net[cu]; return '<div class="big" style="background:' + (x > 0.5 ? '#fde8e6' : '#e2f5ea') + '"><small>' + (x > 0.5 ? 'المتبقي عليكم' : Math.abs(x) < 0.5 ? 'حسابكم بال' + CS[cu] : 'رصيدكم لدينا') + '</small><b class="' + (x > 0.5 ? 'dr' : 'cr') + '">' + (Math.abs(x) < 0.5 ? 'مسدد ✓' : '<span class="n">' + F(Math.abs(x)) + '</span> ' + CS[cu]) + '</b></div>'; }).join('') +
+      '<div class="prog"><i style="width:' + pct + '%"></i></div><div style="display:flex;justify-content:space-between"><span>مستحق <b class="n">' + F(d) + '</b></span><span>مدفوع <b class="n cr">' + F(p) + '</b></span><span><b>' + pct + '%</b></span></div>' +
+      '<table><tbody>' + S.trips.slice(0, 8).map(function (t) { return '<tr><td>' + E(t.name) + '</td><td class="c" style="width:90px">' + chip(t.st) + '</td></tr>'; }).join('') + (S.trips.length > 8 ? '<tr><td colspan="2" class="c">+ ' + (S.trips.length - 8) + ' رحلة أخرى</td></tr>' : '') + '</tbody></table>' +
+      (b ? '<div class="mu">للكشف التفصيلي أو أي استفسار: ' + E(b[1]) + '</div>' : '') + '</div>'; }
+
+  /* ===================== اللوحة ===================== */
+  function panel() {
+    var op = function (k) { return O.open[k] ? ' open' : ''; }, ck = function (k, t) { return '<label class="ck"><input type="checkbox" data-o="' + k + '"' + (O[k] ? ' checked' : '') + '> ' + t + '</label>'; };
+    var adm = O.role === 'admin', asg = ASG[O.acc] || '', asgName = asgLabel(asg);
+    var h = '<details class="grp" data-g="acc"' + op('acc') + '><summary>الحساب والقالب الافتراضي</summary><div class="gbody">' +
+      (H ? '' : '<div class="seg"><span class="hint" style="align-self:center">للتجربة:</span>' + [['admin', 'أدمن'], ['user', 'مستخدم عادي']].map(function (x) { return '<button type="button" data-role="' + x[0] + '" class="' + (O.role === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>') +
+      '<label class="f" for="oAcc">الحساب<select id="oAcc">' + ACCS.map(function (a) { return '<option value="' + a[0] + '"' + (O.acc === a[0] ? ' selected' : '') + '>' + E(a[1]) + (ASG[a[0]] ? ' — ⭐ ' + E(asgLabel(ASG[a[0]])) : '') + '</option>'; }).join('') + '</select></label>' +
+      (adm ? '<label class="f" for="sAssign">القالب الافتراضي للحساب ده (لكل المستخدمين)<select id="sAssign"><option value="">الكشف الحالي (الافتراضي)</option>' +
+          PRESETS.slice(1).map(function (p) { return '<option value="pre:' + p[0] + '"' + (asg === 'pre:' + p[0] ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('') +
+          SAVED.map(function (x) { return '<option value="sv:' + E(x.id || x.name) + '"' + (asg === 'sv:' + (x.id || x.name) ? ' selected' : '') + '>⭐ ' + E(x.name) + '</option>'; }).join('') + '</select></label>' +
+          '<span class="hint">بيتحفظ في قاعدة البيانات ويظهر لكل المستخدمين. أي حساب مش متخصصله قالب بيفتح بالكشف الحالي.</span>'
+        : '<div class="hint">القالب الافتراضي: <b>' + E(asgName) + '</b><br>🔒 تغيير القالب الافتراضي للأدمن بس. تقدر تعاين أي قالب تاني مؤقتاً من غير ما يتحفظ.</div>') +
+      '<button type="button" class="mini" id="bReset" style="padding:5px 8px">↺ ارجع للقالب الافتراضي للحساب</button></div></details>';
+    h += '<details class="grp" data-g="tpl"' + op('tpl') + '><summary>القوالب</summary><div class="gbody"><div class="tpls">' + PRESETS.map(function (p) { return '<button type="button" data-pre="' + p[0] + '" class="' + (O.preset === p[0] ? 'on' : '') + '">' + p[1] + '<small>' + p[2] + '</small></button>'; }).join('') + '</div>' +
+      '<b style="font-size:12.5px">قوالب محفوظة (عامة لكل المستخدمين)</b><div class="saved">' + (SAVED.length ? SAVED.map(function (x, i) { return '<div class="s"><button type="button" class="mini nm" data-load="' + i + '">' + E(x.name) + '</button>' + (adm ? '<button type="button" class="mini" data-del="' + i + '" aria-label="حذف القالب">✕</button>' : '') + '</div>'; }).join('') : '<span class="hint">لسه مفيش.' + (adm ? ' خصّص الكشف واحفظه باسم.' : '') + '</span>') + '</div>' +
+      (adm ? '<div class="row2"><input type="text" id="sName" placeholder="اسم القالب"><button type="button" class="btn" id="sSave">حفظ كقالب</button></div>' : '') + '</div></details>';
+    h += '<details class="grp" data-g="scope"' + op('scope') + '><summary>النطاق والفترة</summary><div class="gbody"><div class="seg">' + [['trip', 'رحلة'], ['grp', 'مجموعة مدمجة'], ['all', 'كل الرحلات']].map(function (x) { return '<button type="button" data-scope="' + x[0] + '" class="' + (O.scope === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      (O.scope === 'trip' ? '<select id="oTrip" aria-label="الرحلة">' + TR.map(function (t) { return '<option value="' + t.code + '"' + (t.code === O.trip ? ' selected' : '') + '>' + E(t.name) + '</option>'; }).join('') + '</select>' : '') +
+      (O.scope === 'grp' ? '<select id="oGrp" aria-label="المجموعة"><option value="A"' + (O.grp === 'A' ? ' selected' : '') + '>' + GRPN.A + ' (6 رحلات)</option><option value="B"' + (O.grp === 'B' ? ' selected' : '') + '>' + GRPN.B + ' (5 رحلات)</option></select>' : '') +
+      (O.scope === 'all' ? '<div class="trips">' + TR.map(function (t) { return '<label class="ck"><input type="checkbox" data-sel="' + t.code + '"' + (O.sel[t.code] !== false ? ' checked' : '') + '> ' + E(t.name) + '</label>'; }).join('') + '</div>' : '') +
+      '<div class="row2"><label class="f" for="oFrom">من تاريخ<input type="text" id="oFrom" placeholder="DD/MM/YYYY" value="' + E(O.from) + '"></label><label class="f" for="oTo">إلى تاريخ<input type="text" id="oTo" placeholder="DD/MM/YYYY" value="' + E(O.to) + '"></label></div></div></details>';
+    h += '<details class="grp" data-g="cur"' + op('cur') + '><summary>العملات</summary><div class="gbody"><div class="seg">' + CORDER.map(function (c) { return '<label class="ck"><input type="checkbox" data-cur="' + c + '"' + (O.curs[c] !== false ? ' checked' : '') + '> ' + CS[c] + '</label>'; }).join('') + '</div>' +
+      '<div class="seg">' + [['cols', 'عمود لكل عملة'], ['label', 'عمود واحد + اسم العملة']].map(function (x) { return '<button type="button" data-cm="' + x[0] + '" class="' + (O.curMode === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><span class="hint">العملة اللي مش موجودة في الحساب مابتظهرش أصلاً.</span></div></details>';
+    h += '<details class="grp" data-g="blk"' + op('blk') + '><summary>أجزاء الكشف وترتيبها</summary><div class="gbody"><span class="hint">علّم الأجزاء اللي تظهر ورتّبها بالأسهم. أكتر من جدول ممكن يظهروا ورا بعض (دمج التصميمات). ⚙️ للأعمدة.</span>' +
+      O.blocks.map(function (b, i) { var hasCols = !!COLDEF[b.k];
+        return '<div class="blk' + (b.on ? '' : ' off') + '"><div class="h"><label><input type="checkbox" data-bon="' + i + '"' + (b.on ? ' checked' : '') + '> ' + BLK[b.k] + '</label>' + (hasCols ? '<button type="button" class="mini" data-bcol="' + b.k + '" aria-label="الأعمدة">⚙️</button>' : '') +
+          '<button type="button" class="mini" data-bmv="' + i + '|-1"' + (i ? '' : ' disabled') + ' aria-label="لأعلى">▲</button><button type="button" class="mini" data-bmv="' + i + '|1"' + (i < O.blocks.length - 1 ? '' : ' disabled') + ' aria-label="لأسفل">▼</button></div>' +
+          (hasCols && O.open['col_' + b.k] ? colEditor(b.k) : '') + '</div>'; }).join('') + '</div></details>';
+    h += '<details class="grp" data-g="opt"' + op('opt') + '><summary>خيارات المحتوى</summary><div class="gbody">' + ck('sub', 'إجمالي لكل رحلة') + ck('gsub', 'إجمالي فرعي لكل مجموعة دمج') + ck('payInline', 'المسدد تحت كل رحلة (المُجمّع)') + ck('sideTrip', 'سطر واحد لكل رحلة (جنب بعض والدفتر)') + ck('codes', 'كود الرحلة') + ck('goDate', 'تاريخ السفر لكل رحلة') + ck('retDate', 'تاريخ العودة لكل رحلة') + ck('status', 'حالة كل رحلة') + ck('run', 'الرصيد المتحرك') + ck('short', 'اختصار بيان التحويلات') + '</div></details>';
+    h += '<details class="grp" data-g="look"' + op('look') + '><summary>الشكل</summary><div class="gbody"><div class="row2"><label class="f" for="oBrand">الشركة<select id="oBrand"><option value="menf"' + (O.brand === 'menf' ? ' selected' : '') + '>منف</option><option value="eht"' + (O.brand === 'eht' ? ' selected' : '') + '>إيجيبشان</option><option value="none"' + (O.brand === 'none' ? ' selected' : '') + '>بدون بيانات شركة</option></select></label>' +
+      '<label class="f" for="oLook">النمط<select id="oLook">' + [['classic', 'الكشف الحالي'], ['formal', 'رسمي بجداول'], ['modern', 'عصري'], ['minimal', 'بسيط بخطوط'], ['band', 'رأس ملوّن'], ['wa', 'بطاقة واتساب']].map(function (x) { return '<option value="' + x[0] + '"' + (O.look === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label></div>' +
+      '<div class="row2"><label class="f" for="oTitle">عنوان الكشف<input type="text" id="oTitle" value="' + E(O.title) + '"></label><label class="f" for="oFs">حجم الخط<select id="oFs"><option value="s"' + (O.fs === 's' ? ' selected' : '') + '>صغير</option><option value="m"' + (O.fs === 'm' ? ' selected' : '') + '>متوسط</option><option value="l"' + (O.fs === 'l' ? ' selected' : '') + '>كبير</option></select></label></div>' +
+      '<div class="row2"><label class="f" for="oFb">خط النصوص' + fsel('oFb', O.fb) + '</label><label class="f" for="oFh">خط العناوين والأرقام' + fsel('oFh', O.fh) + '</label></div>' +
+      '<div class="sw">' + Object.keys(PAL).map(function (k) { return '<button type="button" data-pal="' + k + '" class="' + (O.pal === k ? 'on' : '') + '" style="background:linear-gradient(135deg,' + PAL[k][0] + ' 55%,' + PAL[k][1] + ' 55%)" aria-label="ألوان ' + k + '"></button>'; }).join('') + '</div>' + ck('land', 'الورقة بالعرض') +
+      '<label class="f" for="oNotes">ملاحظات<textarea id="oNotes">' + E(O.notes) + '</textarea></label></div></details>';
+    h += '<button type="button" class="btn" id="b4k">🖼️ معاينة صورة 4K</button>' + (H ? '<span class="hint">التنزيل والطباعة من الأزرار أعلى الصفحة.</span>' : '<span class="hint">جوه البرنامج: تنزيل صورة 4K · PDF عالي الجودة · طباعة.</span>');
+    $('panel').innerHTML = h;
+  }
+  function fsel(id, v) { return '<select id="' + id + '">' + FONTS.map(function (f) { return '<option value="' + f[0] + '"' + (v === f[0] ? ' selected' : '') + ' style="font-family:\'' + f[0] + '\'">' + f[1] + '</option>'; }).join('') + '</select>'; }
+  function svFind(v) { var k = String(v || '').slice(3); return SAVED.filter(function (z) { return (z.id || z.name) === k || z.name === k; })[0]; }
+  function asgLabel(v) { if (!v) return 'الكشف الحالي'; if (v.indexOf('pre:') === 0) { var p = PRESETS.filter(function (x) { return 'pre:' + x[0] === v; })[0]; return p ? p[1] : 'الكشف الحالي'; } var x = svFind(v); return x ? x.name : v.slice(3); }
+  function applyAsg(v) { if (!v) return applyPreset('current'); if (v.indexOf('pre:') === 0) return applyPreset(v.slice(4)); var x = svFind(v); if (x) { loadCfg(x.cfg); O.preset = ''; } else applyPreset('current'); }
+  function loadCfg(c) { Object.keys(c).forEach(function (kk) { O[kk] = JSON.parse(JSON.stringify(c[kk])); }); }
+  function colEditor(t) { var cs = O.cols[t];
+    return '<div class="cols"><div class="c" style="font-weight:600"><span></span><span>العمود</span><span>العرض %</span><span></span><span></span></div>' + cs.map(function (c, i) { var d = COLDEF[t].filter(function (x) { return x[0] === c.k; })[0];
+      return '<div class="c"><input type="checkbox" data-con="' + t + '|' + i + '"' + (c.on ? ' checked' : '') + ' aria-label="إظهار ' + d[1] + '"><span>' + d[1] + '</span><input type="number" min="0" max="80" data-cw="' + t + '|' + i + '" value="' + (c.w || 0) + '" aria-label="عرض ' + d[1] + '"><button type="button" class="mini" data-cmv="' + t + '|' + i + '|-1"' + (i ? '' : ' disabled') + ' aria-label="قبل">▲</button><button type="button" class="mini" data-cmv="' + t + '|' + i + '|1"' + (i < cs.length - 1 ? '' : ' disabled') + ' aria-label="بعد">▼</button></div>'; }).join('') +
+      '<span class="hint">0 = عرض تلقائي. الترتيب من اليمين للشمال.</span></div>'; }
+  function draw() {
+    CLIENT = (ACCS.filter(function (a) { return a[0] === O.acc; })[0] || ACCS[0])[1]; var S = scope(), P = PAL[O.pal], el = $('paper'), isWa = O.look === 'wa', isCl = O.look === 'classic';
+    var cls = 'paper lk-' + O.look + (isWa ? ' wa' : '') + (O.land && !isWa ? ' land' : '') + ' fs-' + O.fs;
+    var body = !S.trips.length ? '<div class="explain">لا توجد حركات في النطاق والفترة المختارة.</div>' : isWa ? wa(S) : isCl ? classic(S) : O.blocks.filter(function (b) { return b.on; }).map(function (b) { return B[b.k](S); }).join('') + '<div class="ft"><span>Smart Manager Pro' + (BR[O.brand] ? ' · ' + E(BR[O.brand][0]) : '') + '</span><span>صفحة 1 من 1</span></div>';
+    el.innerHTML = '<div class="' + cls + '" id="doc" style="--p:' + P[0] + ';--p2:' + P[1] + ';--pl:' + P[2] + ';--fb:\'' + O.fb + '\';--fh:\'' + O.fh + '\'">' + body + '</div>';
+    $('bar').innerHTML = '<span><b>' + S.trips.length + '</b> رحلة · <b>' + S.pays.length + '</b> دفعة</span><span>·</span><span>الرصيد: <b>' + S.curs.map(function (c) { return E(netTxt(S.net[c], c)); }).join(' · ') + '</b></span>' + '<span>·</span><span>القالب الافتراضي للحساب: <b>' + E(asgLabel(ASG[O.acc] || '')) + '</b></span>' + (O.role !== 'admin' && (O.preset || '') !== ((ASG[O.acc] || '').indexOf('pre:') === 0 ? ASG[O.acc].slice(4) : ASG[O.acc] ? '' : 'current') ? '<span>· <b>معاينة مؤقتة</b></span>' : '');
+    store();
+  }
+  function all() { panel(); draw(); }
+  function applyPreset(id) { var p = PRESETS.filter(function (x) { return x[0] === id; })[0]; if (!p) return; O.preset = id; O.blocks = JSON.parse(JSON.stringify(p[3].blocks)); O.look = p[3].look; if (p[3].gsub) O.gsub = true; }
+  var P_ = $('panel');
+  P_.addEventListener('toggle', function (e) { var d = e.target; if (d.dataset && d.dataset.g) { O.open[d.dataset.g] = d.open; store(); } }, true);
+  P_.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return; var ds = b.dataset;
+    if (ds.pre) { applyPreset(ds.pre); return all(); }
+    if (ds.scope) { O.scope = ds.scope; return all(); }
+    if (ds.cm) { O.curMode = ds.cm; return all(); }
+    if (ds.pal) { O.pal = ds.pal; return all(); }
+    if (ds.role) { O.role = ds.role; return all(); }
+    if (b.id === 'bReset') { applyAsg(ASG[O.acc] || ''); return all(); }
+    if (ds.bmv) { var a = ds.bmv.split('|'), i = +a[0], j = i + +a[1]; var x = O.blocks.splice(i, 1)[0]; O.blocks.splice(j, 0, x); O.preset = ''; return all(); }
+    if (ds.bcol) { O.open['col_' + ds.bcol] = !O.open['col_' + ds.bcol]; return all(); }
+    if (ds.cmv) { var q = ds.cmv.split('|'), cs = O.cols[q[0]], k = +q[1], m = k + +q[2]; var y = cs.splice(k, 1)[0]; cs.splice(m, 0, y); return all(); }
+    if (ds.load) { var s = SAVED[+ds.load]; if (s) { loadCfg(s.cfg); O.preset = ''; } return all(); }
+    if (ds.del) { var sd = SAVED[+ds.del], nm = sd.name; if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'تأكيد؟'; return; }
+      if (H) { H.rpc('st_tpl_delete', { p_id: sd.id || sd.name }).then(function (r) { tplSet(r); all(); }, function (e) { H.toast('❌ ' + ((e && e.message) || e)); }); return; }
+      SAVED.splice(+ds.del, 1); Object.keys(ASG).forEach(function (a) { if (ASG[a] === 'sv:' + nm) delete ASG[a]; }); return all(); }
+    if (b.id === 'sSave') { var n = ($('sName').value || '').trim(); if (!n) { $('sName').focus(); return; }
+      var cfg = {}; ['blocks', 'cols', 'look', 'sub', 'gsub', 'codes', 'status', 'short', 'run', 'sideTrip', 'payInline', 'curs', 'curMode', 'brand', 'pal', 'fs', 'land', 'notes', 'title', 'goDate', 'retDate', 'fb', 'fh'].forEach(function (kk) { cfg[kk] = JSON.parse(JSON.stringify(O[kk])); });
+      if (H) { var ex = SAVED.filter(function (s) { return s.name === n; })[0], id = (ex && ex.id) || ('t' + Date.now().toString(36));
+        H.rpc('st_tpl_save', { p: { id: id, name: n, cfg: cfg } }).then(function (r) { tplSet(r); $('sName') && ($('sName').value = ''); H.toast('✅ اتحفظ القالب «' + n + '» لكل المستخدمين'); all(); }, function (e) { H.toast('❌ ' + ((e && e.message) || e)); }); return; }
+      SAVED = SAVED.filter(function (s) { return s.name !== n; }).concat([{ id: n, name: n, cfg: cfg }]); return all(); }
+    if (b.id === 'b4k') return shot();
+  });
+  P_.addEventListener('change', function (e) {
+    var x = e.target, ds = x.dataset;
+    if (ds.o) O[ds.o] = x.checked;
+    else if (ds.sel) O.sel[ds.sel] = x.checked;
+    else if (ds.cur) O.curs[ds.cur] = x.checked;
+    else if (ds.bon) { O.blocks[+ds.bon].on = x.checked; O.preset = ''; return all(); }
+    else if (ds.con) { var a = ds.con.split('|'); O.cols[a[0]][+a[1]].on = x.checked; }
+    else if (ds.cw) { var c = ds.cw.split('|'); O.cols[c[0]][+c[1]].w = Math.max(0, Math.min(80, +x.value || 0)); }
+    else if (x.id === 'oTrip') O.trip = x.value; else if (x.id === 'oGrp') O.grp = x.value; else if (x.id === 'oBrand') O.brand = x.value; else if (x.id === 'oFs') O.fs = x.value; else if (x.id === 'oLook') O.look = x.value;
+    else if (x.id === 'oFrom') O.from = x.value.trim(); else if (x.id === 'oTo') O.to = x.value.trim(); else if (x.id === 'oNotes') O.notes = x.value; else if (x.id === 'oTitle') O.title = x.value;
+    else if (x.id === 'sAssign') { if (O.role !== 'admin') return;
+      if (H) { var vv = x.value; H.rpc('st_assign_set', { p_k: O.acc, p_tpl: vv }).then(function (r) { tplSet(r); applyAsg(vv); H.toast(vv ? '⭐ اتحدد القالب الافتراضي للحساب' : '↩️ رجع الحساب للكشف الحالي'); all(); }, function (e) { H.toast('❌ ' + ((e && e.message) || e)); }); return; }
+      if (x.value) ASG[O.acc] = x.value; else delete ASG[O.acc]; applyAsg(x.value); return all(); }
+    else if (x.id === 'oAcc') { O.acc = x.value; applyAsg(ASG[O.acc] || ''); return all(); }
+    else if (x.id === 'oFb') O.fb = x.value; else if (x.id === 'oFh') O.fh = x.value;
+    draw();
+  });
+  function shot() {
+    var d = $('doc'); $('mInfo').textContent = '⏳ جاري التجهيز…'; $('mImg').removeAttribute('src'); $('modal').hidden = false;
+    if (typeof html2canvas !== 'function') { $('mInfo').textContent = 'مكتبة الصور لم تُحمَّل.'; return; }
+    html2canvas(d, { scale: Math.min(3840 / d.offsetWidth, 5), backgroundColor: '#ffffff' }).then(function (cv) { $('mImg').src = cv.toDataURL('image/png'); $('mInfo').textContent = 'المقاس ' + cv.width + ' × ' + cv.height + ' بكسل — جوه البرنامج بتتنزل على طول أو تتحوّل PDF.'; });
+  }
+  function docHtml() { var d = $('doc'); if (!d) return ''; var css = ''; document.querySelectorAll('style').forEach(function (st) { css += st.textContent; });
+    return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>' + E('كشف حساب — ' + CLIENT) + '</title><link rel="stylesheet" href="' + (document.querySelector('link[href*="fonts.googleapis.com/css2"]') || {}).href + '"><style>' + css + '\nbody{background:#fff;padding:0}.paper{box-shadow:none;margin:0;width:auto;min-height:0}@page{size:A4;margin:10mm}</style></head><body>' + d.outerHTML + '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script></body></html>'; }
+  function exportX(k) {
+    if (k === 'close') { if (H) H.close(); return; }
+    if (O.look === 'classic' && H) { H.printCurrent(O.scope, O.scope === 'trip' && BYC[O.trip] ? BYC[O.trip].key : null, k === 'png' ? 'image' : k === 'pdf' ? 'pdf' : undefined); return; }
+    if (k === 'png') { var d = $('doc'); if (!d || typeof html2canvas !== 'function') return; if (H) H.toast('⏳ جاري تجهيز الصورة…');
+      html2canvas(d, { scale: Math.min(3840 / d.offsetWidth, 5), backgroundColor: '#ffffff' }).then(function (cv) { var a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = 'كشف حساب - ' + CLIENT + ' - ' + new Date().toLocaleDateString('en-GB').replace(/\//g, '-') + '.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); if (H) H.toast('✅ اتنزلت الصورة (' + cv.width + '×' + cv.height + ')'); }); return; }
+    var html = docHtml(); if (!html) return;
+    if (H) H.printHtml(html, 'كشف حساب — ' + CLIENT); else { var w = window.open('', '_blank'); if (w) { w.document.open(); w.document.write(html); w.document.close(); } }
+  }
+  document.getElementById('xbar').addEventListener('click', function (e) { var b = e.target.closest('button[data-x]'); if (b) exportX(b.dataset.x); });
+  $('paper').addEventListener('click', function (e) { var b = e.target.closest('button[data-cur]'); if (b && H) H.printCurrent(O.scope, O.scope === 'trip' && BYC[O.trip] ? BYC[O.trip].key : null, b.dataset.cur === 'print' ? undefined : b.dataset.cur); });
+  if (H) { $('xbar').hidden = false; $('bdg').textContent = 'حساب: ' + CLIENT; $('ttl').textContent = '🧾 قوالب كشف الحساب'; $('intro').textContent = 'اختر قالباً وظبّط أجزاءه وأعمدته وعملاته، ونزّله صورة 4K أو PDF أو اطبعه. الأدمن يحفظ القوالب لكل المستخدمين ويحدد القالب الافتراضي لكل حساب.'; }
+  $('mClose').addEventListener('click', function () { $('modal').hidden = true; });
+  $('modal').addEventListener('click', function (e) { if (e.target === $('modal')) $('modal').hidden = true; });
+  all();
+  if (H) tplLoad();
+})();
+</script>
