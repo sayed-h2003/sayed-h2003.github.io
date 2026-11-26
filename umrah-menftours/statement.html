@@ -152,7 +152,7 @@ textarea { min-height: 50px; resize: vertical }
 .paper tr.k-bal td { background: #eef2f7; border-top: 3px double #0f172a; font-family: var(--fh), Tahoma, sans-serif; font-weight: 900; font-size: 1.2em; padding: 9px 8px }
 .paper .k-sig { text-align: center; color: #94a3b8; font-size: .85em }
 .paper.cap, .paper.cap * { overflow-wrap: normal !important; word-break: normal !important; letter-spacing: 0 !important }
-@media print { body { background: #fff !important; padding: 0 !important } .top, .panel, .bar, .hint, .modal, #stBusy { display: none !important } .app { display: block !important } .paperwrap { padding: 0 !important; background: #fff !important; overflow: visible !important } .paper { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: 0 !important; padding: 0 !important } @page { size: A4; margin: 10mm } }
+@media print { body { background: #fff !important; padding: 0 !important } .top, .panel, .bar, .hint, .modal, #stBusy { display: none !important } .app { display: block !important } .paperwrap { padding: 0 !important; background: #fff !important; overflow: visible !important } .paper { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: 0 !important; padding: 0 !important } @page { size: A4; margin: 10mm 10mm 14mm; @bottom-center { content: "صفحة " counter(page) " من " counter(pages); font: 10px Tahoma, sans-serif; color: #64748b } } .paper .ft { display: none !important } .paper thead { display: table-header-group } .paper tr { break-inside: avoid } }
 .paper.wa { width: 540px; min-height: 0; padding: 0; overflow: hidden; border-radius: 18px; gap: 0 }
 .paper.wa .wh { background: var(--p); color: #ffffff; padding: 18px 20px }
 .paper.wa .wh b { font-family: var(--fh), Tahoma, sans-serif; font-weight: 800; font-size: 1.6em; display: block }
@@ -336,7 +336,7 @@ textarea { min-height: 50px; resize: vertical }
     var h = '<table><colgroup>' + cs.map(function (c) { return '<col' + (c.w ? ' style="width:' + c.w + '%"' : '') + '>'; }).join('') + '</colgroup><thead><tr>' + cs.map(function (c) { return '<th>' + E(c.lbl) + '</th>'; }).join('') + '</tr></thead><tbody>';
     rows.forEach(function (r) {
       if (r.t === 'h') { h += '<tr class="h"><td colspan="' + cs.length + '">' + r.html + '</td></tr>'; return; }
-      var lblDone = false, txtIx = cs.map(function (c) { return AMT[c.k] ? -1 : 1; }).indexOf(1), atIx = r.at ? cs.map(function (c) { return c.k; }).indexOf(r.at) : -1; if (atIx >= 0) txtIx = atIx;
+      var lblDone = false, txtIx = cs.map(function (c) { return AMT[c.k] ? -1 : 1; }).indexOf(1), ks = cs.map(function (c) { return c.k; }), atIx = r.at ? ks.indexOf(r.at) : -1; if (atIx < 0) ['desc', 'dDesc', 'trip', 'svc', 'pDesc'].some(function (k) { atIx = ks.indexOf(k); return atIx >= 0; }); if (atIx >= 0) txtIx = atIx;
       h += '<tr class="' + (r.cls || '') + '">' + cs.map(function (c, i) {
         var v = r.v[c.k], cls = (AMT[c.k] ? 'a' : (c.k === 'desc' || c.k === 'trip' || c.k === 'svc' || /Desc$/.test(c.k) ? '' : 'c')) + (i === mid ? ' mid' : '');
         if (r.t === 's' && !AMT[c.k]) { if (!lblDone && i === txtIx) { lblDone = true; return '<td class="' + cls + '"><b>' + r.label + '</b></td>'; } return '<td class="' + cls + '"></td>'; }
@@ -571,7 +571,9 @@ textarea { min-height: 50px; resize: vertical }
   function capture(scale) { var d = $('doc'); if (!d || typeof html2canvas !== 'function') return Promise.reject(new Error('مكتبة الصور لم تُحمَّل'));
     d.classList.add('cap'); var fr = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
     return fr.then(function () { return html2canvas(d, { scale: scale, backgroundColor: '#ffffff', useCORS: true }); }).then(function (cv) { d.classList.remove('cap'); return cv; }, function (e) { d.classList.remove('cap'); throw e; }); }
-  var fname = function (ext) { return 'كشف حساب - ' + CLIENT + (O.scope === 'trip' && BYC[O.trip] ? ' - ' + BYC[O.trip].name : '') + ' - ' + new Date().toLocaleDateString('en-GB').replace(/\//g, '-') + '.' + ext; };
+  var stamp = function () { var n = new Date(), z = function (x) { return ('0' + x).slice(-2); }; return z(n.getDate()) + '-' + z(n.getMonth() + 1) + '-' + n.getFullYear() + ' ' + z(n.getHours()) + '-' + z(n.getMinutes()); };
+  var fbase = function () { return ('كشف حساب ' + CLIENT + (O.scope === 'trip' && BYC[O.trip] ? ' ' + BYC[O.trip].name : '') + ' ' + stamp()).replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim(); };
+  var fname = function (ext) { return fbase() + '.' + ext; };
   var dl = function (blob, name) { if (H && H.save) { try { H.save(blob, name); return; } catch (eS) {} } var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(a.href); }, 8000); };
   function busy(on, t) { var b = $('stBusy'); if (!b) { b = document.createElement('div'); b.id = 'stBusy'; b.style.cssText = 'position:fixed;inset:0;background:rgba(10,18,15,.55);color:#fff;display:flex;align-items:center;justify-content:center;font:700 16px var(--ui);z-index:50'; document.body.appendChild(b); } b.textContent = t || '⏳ جاري التجهيز…'; b.style.display = on ? 'flex' : 'none'; }
   function exportX(k, auto) {
@@ -581,17 +583,31 @@ textarea { min-height: 50px; resize: vertical }
     if (k === 'png') { busy(true, '⏳ جاري تجهيز صورة 4K…');
       capture(Math.min(3840 / $('doc').offsetWidth, 5)).then(function (cv) { cv.toBlob(function (bl) { dl(bl, fname('png')); if (H) H.toast('✅ اتنزلت الصورة (' + cv.width + '×' + cv.height + ')'); fin(); }, 'image/png'); }, function (e) { busy(false); if (H) H.toast('❌ ' + e.message); }); return; }
     if (k === 'pdf') { if (!window.jspdf) { if (H) H.toast('❌ مكتبة PDF لم تُحمَّل'); return; } busy(true, '⏳ جاري تجهيز PDF…');
+      var doc0 = $('doc'), ft0 = doc0 && doc0.querySelector('.ft'); if (ft0) ft0.style.display = 'none';
+      var mh0 = doc0.style.minHeight; doc0.style.minHeight = '0';
+      // نقاط قطع آمنة (نهاية كل صف/جزء) بإحداثيات الصفحة قبل الالتقاط
+      var top0 = doc0.getBoundingClientRect().top, brk = [];
+      doc0.querySelectorAll('tr, .paper > div, .tl .e, .final, .words, .notes, .sign').forEach(function (el) { var r = el.getBoundingClientRect(); brk.push(r.bottom - top0); });
+      brk.sort(function (a, b) { return a - b; });
       capture(3).then(function (cv) {
+        if (ft0) ft0.style.display = ''; doc0.style.minHeight = mh0;
         var land = O.land && O.look !== 'wa', pdf = new window.jspdf.jsPDF({ orientation: land ? 'l' : 'p', unit: 'mm', format: 'a4', compress: true });
-        var W = land ? 297 : 210, Hh = land ? 210 : 297, m = 8, iw = W - 2 * m, ih = Hh - 2 * m, pxPerMm = cv.width / iw, pageH = Math.floor(ih * pxPerMm), y = 0, first = true;
-        while (y < cv.height) { var h = Math.min(pageH, cv.height - y), c2 = document.createElement('canvas'); c2.width = cv.width; c2.height = h; var g = c2.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c2.width, h); g.drawImage(cv, 0, y, cv.width, h, 0, 0, cv.width, h);
-          if (!first) pdf.addPage(); first = false; pdf.addImage(c2.toDataURL('image/jpeg', 0.92), 'JPEG', m, m, iw, h / pxPerMm); y += h; }
+        var W = land ? 297 : 210, Hh = land ? 210 : 297, m = 8, fh = 7, iw = W - 2 * m, ih = Hh - 2 * m - fh, pxPerMm = cv.width / iw, pageH = Math.floor(ih * pxPerMm), k = cv.height / Math.max(1, doc0.getBoundingClientRect().height), y = 0, cuts = [];
+        while (y < cv.height - 2) { var lim = y + pageH, best = 0; if (lim >= cv.height) { cuts.push([y, cv.height]); break; }
+          brk.forEach(function (b) { var px = Math.round(b * k) + 1; if (px > y + pageH * 0.35 && px <= lim) best = px; }); var e = best || lim; cuts.push([y, e]); y = e; }
+        var N = cuts.length;
+        cuts.forEach(function (c, i) { var h = c[1] - c[0], fpx = Math.round(fh * pxPerMm), c2 = document.createElement('canvas'); c2.width = cv.width; c2.height = h + fpx; var g = c2.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c2.width, c2.height); g.drawImage(cv, 0, c[0], cv.width, h, 0, 0, cv.width, h);
+          g.fillStyle = '#64748b'; g.font = Math.round(fpx * 0.42) + 'px Tajawal, Tahoma, sans-serif'; g.direction = 'rtl'; g.textAlign = 'center'; g.fillText('صفحة ' + (i + 1) + ' من ' + N, c2.width / 2, h + fpx * 0.72);
+          g.textAlign = 'right'; g.fillText(CLIENT, c2.width - 4, h + fpx * 0.72); g.direction = 'ltr'; g.textAlign = 'left'; g.fillText(stamp().replace(' ', '  '), 4, h + fpx * 0.72);
+          if (i) pdf.addPage(); pdf.addImage(c2.toDataURL('image/jpeg', 0.92), 'JPEG', m, m, iw, (h + fpx) / pxPerMm); });
+        try { pdf.setProperties({ title: fbase() }); } catch (eP) {}
         var bl = pdf.output('blob'), nm = fname('pdf');
         var f = (typeof File === 'function') ? new File([bl], nm, { type: 'application/pdf' }) : null;
         if (!auto && f && navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: nm }).catch(function () { dl(bl, nm); }); } else dl(bl, nm);
         if (H) H.toast('✅ اتجهز ملف PDF'); fin();
-      }, function (e) { busy(false); if (H) H.toast('❌ ' + e.message); }); return; }
-    if (H) { var done = false, after = function () { if (done) return; done = true; window.removeEventListener('afterprint', after); fin(); }; window.addEventListener('afterprint', after); (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function () { setTimeout(function () { window.print(); if (!auto) after(); }, 150); }); return; }
+      }, function (e) { if (ft0) ft0.style.display = ''; doc0.style.minHeight = mh0; busy(false); if (H) H.toast('❌ ' + e.message); }); return; }
+    if (H) { var done = false, after = function () { if (done) return; done = true; window.removeEventListener('afterprint', after); fin(); }; window.addEventListener('afterprint', after); var t0 = document.title; document.title = fbase(); try { if (window.parent && window.parent !== window) { window.__pt = window.parent.document.title; window.parent.document.title = document.title; } } catch (eT) {} window.addEventListener('afterprint', function rs() { window.removeEventListener('afterprint', rs); document.title = t0; try { if (window.__pt) window.parent.document.title = window.__pt; } catch (eT2) {} });
+      (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function () { setTimeout(function () { window.print(); if (!auto) after(); }, 150); }); return; }
     if (O.look === 'classic' && H) { H.printCurrent(O.scope, O.scope === 'trip' && BYC[O.trip] ? BYC[O.trip].key : null, k === 'png' ? 'image' : k === 'pdf' ? 'pdf' : undefined); return; }
     if (k === 'png') { var d = $('doc'); if (!d || typeof html2canvas !== 'function') return; if (H) H.toast('⏳ جاري تجهيز الصورة…');
       html2canvas(d, { scale: Math.min(3840 / d.offsetWidth, 5), backgroundColor: '#ffffff' }).then(function (cv) { var a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = 'كشف حساب - ' + CLIENT + ' - ' + new Date().toLocaleDateString('en-GB').replace(/\//g, '-') + '.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); if (H) H.toast('✅ اتنزلت الصورة (' + cv.width + '×' + cv.height + ')'); }); return; }
